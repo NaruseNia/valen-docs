@@ -15,11 +15,11 @@ class User(pub name: String, mut age: Int) {
 }
 ```
 
-クラスは**デフォルトで final**。メソッドはクラス本体内で直接定義するか、固有 `impl` ブロックで後から追加できる。Trait の実装は常に別途: `impl Trait for Class { ... }`。
+クラスは**デフォルトで final** です。メソッドはクラス本体内で直接定義するか、固有 `impl` ブロックで後から追加できます。Trait の実装は常に別途 `impl Trait for Class { ... }` で行います。
 
 ## プライマリコンストラクタパラメータ
 
-すべてのクラスに必須のプライマリコンストラクタがある。パラメータがクラスのフィールドを宣言する。
+すべてのクラスに必須のプライマリコンストラクタがあります。パラメータがクラスのフィールドを宣言します。
 
 | 修飾子      | 可視性    | 可変性     | 例                   |
 |-------------|-----------|------------|----------------------|
@@ -29,11 +29,11 @@ class User(pub name: String, mut age: Int) {
 | `private`   | Private   | イミュータブル | `private name: String` |
 | `mut`       | Internal  | ミュータブル   | `mut age: Int`       |
 
-- **修飾子なし**のパラメータは `internal` — 同一パッケージ内で可視、外部からは不可視。
-- `pub` / `internal` / `private` はパラメータごとに指定可能。
-- 修飾子の順序: 可視性が先、次に `mut` — `pub mut` であり `mut pub` ではない。
+- **修飾子なし**のパラメータは `internal` で、同一パッケージ内で可視、外部からは不可視です。
+- `pub` / `internal` / `private` はパラメータごとに指定できます。
+- 修飾子の順序は「可視性が先、次に `mut`」です。`pub mut` であり `mut pub` ではありません。
 
-コンストラクタパラメータはデフォルト値をサポート:
+コンストラクタパラメータはデフォルト値をサポートしています。
 
 ```valen
 class Config(pub host: String = "localhost", pub port: Int = 8080) {}
@@ -41,7 +41,7 @@ class Config(pub host: String = "localhost", pub port: Int = 8080) {}
 
 ## 固有 `impl` ブロック
 
-クラス本体の外側で `impl Type { ... }` を使ってメソッドを追加できる:
+クラス本体の外側で `impl Type { ... }` を使ってメソッドを追加できます。
 
 ```valen
 // クラス本体内のメソッド
@@ -55,14 +55,14 @@ impl Foo {
 }
 ```
 
-- 固有 impl メソッドはクラス本体メソッドと同じ解決優先度。
-- `fn method(self)` — インスタンスメソッド、`foo.bar()` で呼び出す。
-- `fn assoc(x: T)` (`self` なし) — 関連関数、`Foo::assoc(x)` で呼び出す。
-- Trait の実装は常に別途: `impl Trait for Foo { ... }`。
+- 固有 impl メソッドはクラス本体メソッドと同じ解決優先度
+- `fn method(self)` — インスタンスメソッド、`foo.bar()` で呼び出す
+- `fn assoc(x: T)` (`self` なし) — 関連関数、`Foo::assoc(x)` で呼び出す
+- Trait の実装は常に別途: `impl Trait for Foo { ... }`
 
 ## `derives(...)` 句
 
-クラスと data class は `derives(...)` を宣言して標準メソッドを自動生成できる。
+クラスと data class は `derives(...)` を宣言して標準メソッドを自動生成できます。
 
 ```valen
 class Foo(pub x: Int, pub y: Int) derives(Eq, Hash) {
@@ -72,7 +72,7 @@ class Foo(pub x: Int, pub y: Int) derives(Eq, Hash) {
 data class Point(x: Float, y: Float) derives(Eq, Hash, Display, Clone);
 ```
 
-**構文:** `derives(Trait1, Trait2, ...)` — コンストラクタパラメータ（およびスーパータイプ句がある場合はその後）の後、本体 `{` または終端 `;` の前に配置。
+**構文:** `derives(Trait1, Trait2, ...)` — コンストラクタパラメータ（およびスーパータイプ句がある場合はその後）の後、本体 `{` または終端 `;` の前に配置します。
 
 ### 導出可能な Trait
 
@@ -83,7 +83,7 @@ data class Point(x: Float, y: Float) derives(Eq, Hash, Display, Clone);
 | `Display` | `toString() -> String`         | `ClassName(field=value, ...)` 形式 |
 | `Clone`  | `copy(...) -> Self`             | 全フィールドコピーコンストラクタ  |
 
-`data class` は 4 つすべてを自動的に導出する — 明示的な `derives(...)` は冗長だが無害。通常の `class` や `enum` でオプトインするために `derives(...)` を使用。
+`data class` は 4 つすべてを自動的に導出します。明示的な `derives(...)` は冗長ですが無害です。通常の `class` や `enum` でオプトインするために `derives(...)` を使います。
 
 ## `data class`
 
@@ -101,7 +101,7 @@ data class User(pub name: String, pub email: String);
 | `toString`   | `TypeName(field=value, ...)` 形式       |
 | `copy`       | 名前付きオーバーライド付きコピーコンストラクタ |
 
-自動生成は data class 自身の**プライマリコンストラクタパラメータのみ**を考慮する（継承された状態は含まない）。
+自動生成は data class 自身の**プライマリコンストラクタパラメータのみ**を考慮します（継承された状態は含みません）。
 
 ### 制約
 
@@ -116,7 +116,7 @@ data class User(pub name: String, pub email: String);
 | セミコロン終端             | 本体なしの data class は `;` で終端              |
 
 ::: warning 既知の制限
-スーパータイプ構文 (`: SuperClass(args)`) はパースされるが、スーパータイプ情報は **HIR ローワリング時に失われる**。data class は現在、生成されるバイトコードでは常に `java.lang.Object` を継承する。将来のリリースで修正予定。
+スーパータイプ構文 (`: SuperClass(args)`) はパースされますが、スーパータイプ情報は **HIR ローワリング時に失われます**。data class は現在、生成されるバイトコードでは常に `java.lang.Object` を継承します。将来のリリースで修正予定です。
 :::
 
 ## `open` / `abstract` / `sealed` class
@@ -142,10 +142,10 @@ class Card(pub number: String) : Payment();
 data class Cash : Payment();
 ```
 
-`open` は連鎖しない — `B : A` で `B` 自身もサブクラス化可能にしたい場合、`B` にも `open` を宣言する必要がある。
+`open` は連鎖しません。`B : A` で `B` 自身もサブクラス化可能にしたい場合、`B` にも `open` を宣言する必要があります。
 
 ::: warning 既知の制限 — 抽象メソッド
-AST は本体なしメソッド（`body: Option<Block>`）をサポートするが、**現在のパーサーはすべてのメソッドに本体を要求する**。`abstract fn area(self) -> Float;`（セミコロン終端、本体なし）はパースエラーになる。現時点では抽象メソッドにはプレースホルダ本体が必要。セミコロン終端の本体なし `abstract fn` のサポートを予定。
+AST は本体なしメソッド（`body: Option<Block>`）をサポートしていますが、**現在のパーサーはすべてのメソッドに本体を要求します**。`abstract fn area(self) -> Float;`（セミコロン終端、本体なし）はパースエラーになります。現時点では抽象メソッドにはプレースホルダ本体が必要です。セミコロン終端の本体なし `abstract fn` のサポートを予定しています。
 :::
 
 ## `sealed class` / `sealed trait` のバイトコード
@@ -155,11 +155,11 @@ AST は本体なしメソッド（`body: Option<Block>`）をサポートする�
 | `sealed class Foo` | `abstract class Foo` + `PermittedSubclasses` 属性 |
 | `sealed trait Foo` | `interface Foo` (abstract + interface) + `PermittedSubclasses` 属性 |
 
-sealed class/trait は JVM の sealed class (JEP 360/397, JDK 17+) を活用する。`PermittedSubclasses` クラスファイル属性が許可されたサブタイプを列挙する。
+sealed class/trait は JVM の sealed class (JEP 360/397, JDK 17+) を活用します。`PermittedSubclasses` クラスファイル属性が許可されたサブタイプを列挙します。
 
 ## `override fn`
 
-親メソッドのオーバーライドには、親の `open fn` と子の `override fn` の両方が必要。
+親メソッドのオーバーライドには、親の `open fn` と子の `override fn` の両方が必要です。
 
 ```valen
 class Dog(pub name: String) : Animal(name) {
@@ -167,14 +167,14 @@ class Dog(pub name: String) : Animal(name) {
 }
 ```
 
-- 親メソッドのシャドウイング時に `override` を省略するとコンパイルエラー。
-- `override` はシグネチャが親の `open fn` に一致する場合にのみ必要。
-- シグネチャが異なる場合（引数の数や型）、同名は `override` なしで共存可能。
-- クラス本体のメソッドは trait の要件を**充足しない** — trait の実装は `impl Trait for Type { ... }` ブロックで行う必要がある。
+- 親メソッドのシャドウイング時に `override` を省略するとコンパイルエラー
+- `override` はシグネチャが親の `open fn` に一致する場合にのみ必要
+- シグネチャが異なる場合（引数の数や型）、同名は `override` なしで共存可能
+- クラス本体のメソッドは trait の要件を**充足しません**。trait の実装は `impl Trait for Type { ... }` ブロックで行う必要があります。
 
 ## スーパークラスコンストラクタ呼び出し
 
-スーパークラスコンストラクタは継承句で呼び出す:
+スーパークラスコンストラクタは継承句で呼び出します。
 
 ```valen
 class Dog(pub name: String) : Animal(name) {
@@ -182,32 +182,32 @@ class Dog(pub name: String) : Animal(name) {
 }
 ```
 
-引数は親のプライマリコンストラクタに直接渡される。
+引数は親のプライマリコンストラクタに直接渡されます。
 
 ## `super` 呼び出し
 
-`super.method()` は親**クラス**のメソッドのみを呼び出す。Trait のデフォルトメソッドを呼び出すには UFCS を使用: `Trait::method(self)`。Valen は単一クラス継承のため、`super` に曖昧さは生じない。
+`super.method()` は親**クラス**のメソッドのみを呼び出します。Trait のデフォルトメソッドを呼び出すには UFCS を使います: `Trait::method(self)`。Valen は単一クラス継承のため、`super` に曖昧さは生じません。
 
 ## クラス本体の制約
 
-クラス本体は**メソッド宣言のみ**をサポートする。クラス本体内のフィールド宣言は現在のパーサーではサポートされていない — フィールドはコンストラクタパラメータとしてのみ定義。クラス本体内でメソッド以外のトークンに遭遇するとパースエラーが発生する。
+クラス本体は**メソッド宣言のみ**をサポートします。クラス本体内のフィールド宣言は現在のパーサーではサポートされていません。フィールドはコンストラクタパラメータとしてのみ定義します。クラス本体内でメソッド以外のトークンに遭遇するとパースエラーが発生します。
 
 ## メソッド解決順序
 
-`value.foo(args)` を解決する際、コンパイラは以下の順序に従う:
+`value.foo(args)` を解決する際、コンパイラは以下の順序に従います。
 
-1. **クラス本体** — クラス宣言内で定義されたメソッド（最高優先度）。
-2. **固有 impl** — `impl Type { ... }` ブロックのメソッド。
-3. **Trait メソッド** — スコープ内の trait メソッド（最低優先度）。
-4. **曖昧性エラー** — 複数の trait 候補がマッチし、区別できない場合。
+1. **クラス本体** — クラス宣言内で定義されたメソッド（最高優先度）
+2. **固有 impl** — `impl Type { ... }` ブロックのメソッド
+3. **Trait メソッド** — スコープ内の trait メソッド（最低優先度）
+4. **曖昧性エラー** — 複数の trait 候補がマッチし、区別できない場合
 
-UFCS で明確化: `Trait::foo(value, args...)`。
+UFCS で明確化: `Trait::foo(value, args...)`
 
-`Class::foo(args...)` は関連関数（`self` なし）専用。インスタンスメソッドは常にドット構文を使用。
+`Class::foo(args...)` は関連関数（`self` なし）専用です。インスタンスメソッドは常にドット構文を使います。
 
 ## 関連関数とトップレベル関数
 
-`parse(x)` はトップレベル関数として解決される。`User::parse(x)` は `User` の関連関数として解決される。2つの名前空間は統合されない。
+`parse(x)` はトップレベル関数として解決されます。`User::parse(x)` は `User` の関連関数として解決されます。2つの名前空間は統合されません。
 
 **推奨:**
 - **関連関数** — ファクトリメソッド、コンストラクタ、型の内部に触れるもの（`from_*`、`parse`、`zero`、`default`）

@@ -1,15 +1,15 @@
 # はじめに
 
-Valenコンパイラをマシンにインストールしよう。2分もあれば終わる — コーヒーが冷める前にコンパイルできるようになる。
+Valenコンパイラをマシンにインストールしましょう。2分もあれば終わります — コーヒーが冷める前にコンパイルできるようになりますよ。
 
 ## 前提条件
 
-- **JVM 21以降** — ValenはJVM 21をベースラインターゲットとしている。コンパイル結果を実行するにはJDKが必要。
-- **ターミナル** — 当然だが。
+- **JVM 21以降** — ValenはJVM 21をベースラインターゲットとしています。コンパイル結果を実行するにはJDKが必要です。
+- **ターミナル** — 当然ですね。
 
 ## インストール
 
-一番楽そうな方法を選ぼう:
+一番楽そうな方法を選んでください。
 
 ### 方法1: インストールスクリプト（推奨）
 
@@ -17,15 +17,15 @@ Valenコンパイラをマシンにインストールしよう。2分もあれ�
 curl -fsSL https://raw.githubusercontent.com/NaruseNia/valen-lang/main/install.sh | bash
 ```
 
-最新リリースのバイナリをダウンロードしてPATHに配置する。macOSとLinuxで動作する。
+最新リリースのバイナリをダウンロードしてPATHに配置します。macOSとLinuxで動作します。
 
 ::: warning Windows
-インストールスクリプトはUnix系システム向け。Windowsでは下記のGitHub Releasesからダウンロードするか、Cargoでソースからビルドすること。
+インストールスクリプトはUnix系システム向けです。Windowsでは下記のGitHub Releasesからダウンロードするか、Cargoでソースからビルドしてください。
 :::
 
 ### 方法2: ソースからビルド
 
-RustとCargoがインストール済みなら（Rustスタイルのadtを持つ言語に興味があるなら、おそらくそうだろう）:
+RustとCargoがインストール済みなら（Rustスタイルのadtを持つ言語に興味があるなら、きっとそうですよね）:
 
 ```sh
 cargo install --path crates/valenc
@@ -41,7 +41,7 @@ cargo install --path crates/valenc
 
 ### 方法3: GitHub Releases
 
-[Releasesページ](https://github.com/NaruseNia/valen-lang/releases)からプラットフォーム用のバイナリをダウンロード。PATH上のどこかに置けば完了。
+[Releasesページ](https://github.com/NaruseNia/valen-lang/releases)からプラットフォーム用のバイナリをダウンロード。PATH上のどこかに置けば完了です。
 
 ## インストールの確認
 
@@ -49,17 +49,17 @@ cargo install --path crates/valenc
 valenc version
 ```
 
-以下のような出力が表示されるはず:
+こんな出力が表示されるはずです:
 
 ```
 valenc 0.1.0
 ```
 
-`command not found` と表示される場合は、インストール先ディレクトリがPATHに含まれているか確認しよう。インストールスクリプトが正確な場所を表示するので、まずそこをチェック。
+`command not found` と表示される場合は、インストール先ディレクトリがPATHに含まれているか確認してください。インストールスクリプトが正確な場所を表示するので、まずそこをチェック。
 
 ## 最初のValenプログラム
 
-`hello.vln` というファイルを作成する:
+`hello.vln` というファイルを作りましょう。
 
 ```valen
 package com.example.hello;
@@ -70,7 +70,7 @@ fn main() {
 ```
 
 ::: tip .vlnであって.valではない
-Valenのソースファイルは `.vln` 拡張子を使い、UTF-8でエンコードされている必要がある。`.val` も検討したが、すでに他の12個くらいのものに使われていた。
+Valenのソースファイルは `.vln` 拡張子を使い、UTF-8でエンコードされている必要があります。`.val` も検討したんですが、すでに他の12個くらいのものに使われていました。
 :::
 
 コンパイル:
@@ -79,27 +79,27 @@ Valenのソースファイルは `.vln` 拡張子を使い、UTF-8でエンコ�
 valenc hello.vln
 ```
 
-`.class` ファイルが生成される。Javaで実行:
+`.class` ファイルが生成されます。Javaで実行:
 
 ```sh
 java -cp . com.example.hello.Main
 ```
 
-以下が表示されるはず:
+こう表示されるはずです:
 
 ```
 Hello, Valen!
 ```
 
-おめでとう — 最初のValenプログラムをコンパイルして実行できた。そんなに大変じゃなかっただろう？
+おめでとうございます — 最初のValenプログラムをコンパイルして実行できました。そんなに大変じゃなかったですよね？
 
 ## エディタ設定
 
-ValenにはLSPサーバー（`valen-lsp`）が同梱されており、補完、ホバー情報、診断を提供する。Language Server Protocolをサポートする任意のエディタで動作する。
+ValenにはLSPサーバー（`valen-lsp`）が同梱されていて、補完、ホバー情報、診断を提供します。Language Server Protocolをサポートする任意のエディタで動作します。
 
 ### LSPサーバーのインストール
 
-ソースからビルドした場合、LSPサーバーは同じリポジトリ内にある:
+ソースからビルドした場合、LSPサーバーは同じリポジトリ内にあります:
 
 ```sh
 cargo install --path crates/valen-lsp
@@ -107,7 +107,7 @@ cargo install --path crates/valen-lsp
 
 ### エディタの設定
 
-**VS Code:** マーケットプレイスからValen拡張機能をインストール（近日公開）、または汎用LSPクライアントで `valen-lsp` バイナリを指定。
+**VS Code:** マーケットプレイスからValen拡張機能をインストール（近日公開）、または汎用LSPクライアントで `valen-lsp` バイナリを指定してください。
 
 **Neovim (nvim-lspconfig):**
 
@@ -119,15 +119,15 @@ require('lspconfig').valen_lsp.setup {
 }
 ```
 
-**その他のLSP対応エディタ:** `valen-lsp` バイナリを指定するだけ。サーバーは標準LSPをstdio経由で通信する。
+**その他のLSP対応エディタ:** `valen-lsp` バイナリを指定するだけでOKです。サーバーは標準LSPをstdio経由で通信します。
 
 ::: tip シンタックスハイライト
-最良の体験のために、LSPとValen用のTextMate文法を組み合わせよう。このドキュメントサイト自体も使っている — [valen-docsリポジトリ](https://github.com/NaruseNia/valen-docs)で `valen.tmLanguage.json` を確認できる。
+最良の体験のために、LSPとValen用のTextMate文法を組み合わせましょう。このドキュメントサイト自体も使っています — [valen-docsリポジトリ](https://github.com/NaruseNia/valen-docs)で `valen.tmLanguage.json` を確認できます。
 :::
 
 ## プロジェクト構成
 
-典型的なValenプロジェクトは以下のような構成:
+典型的なValenプロジェクトはこんな構成です:
 
 ```
 my-project/
@@ -140,8 +140,8 @@ my-project/
 └── build/
 ```
 
-ソースファイルは `src/` 以下に、パッケージ階層をミラーして配置する（Javaと同じ）。各ファイル先頭の `package` 宣言はディレクトリパスと一致している必要がある。
+ソースファイルは `src/` 以下に、パッケージ階層をミラーして配置します（Javaと同じ）。各ファイル先頭の `package` 宣言はディレクトリパスと一致している必要があります。
 
 ## 次のステップ
 
-セットアップが完了したので、「Hello, World」より面白いものを書いてみよう。[Hello, Valen](/ja/guide/hello-valen)でValenの主要機能を1つのプログラムで体験するガイドツアーへ進もう。
+セットアップが完了したので、「Hello, World」よりもうちょっと面白いものを書いてみましょう。[Hello, Valen](/ja/guide/hello-valen)でValenの主要機能を1つのプログラムで体験するガイドツアーへ進みましょう。

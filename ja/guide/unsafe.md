@@ -1,23 +1,23 @@
 # Unsafe と Safe
 
-Valen の型システムと失敗モデルはあなたを安全に保つために懸命に働く — null は `Option`、Java 例外は `Result` になり、ダウンキャストには証明が必要。だが時には、コンパイラが知らないことをあなたが知っている場合がある。「これは信じて」と伝える必要がある。
+Valen の型システムと失敗モデルは、あなたを安全に保つために懸命に働いてくれます — null は `Option` に、Java 例外は `Result` に、ダウンキャストには証明が必要。でも時には、コンパイラが知らないことをあなたが知っている場合があります。「ここは信じて」と伝える必要があるんです。
 
-それが `unsafe` の役割。安全保証からの明示的なオプトアウト。そして `safe` はその対になるもの — Java のワイルドな振る舞いを Valen の秩序ある型システムにラップする明示的なオプトイン。
+それが `unsafe` の役割です。安全保証からの明示的なオプトアウト。そして `safe` はその対になるもの — Java のワイルドな振る舞いを Valen の秩序ある型システムにラップする明示的なオプトインです。
 
 ## `safe { }` ブロック
 
-`safe` ブロックは Java 例外をキャッチして `Result<T, JavaException>` にラップする。Java メソッドを呼ぶ標準的な方法:
+`safe` ブロックは Java 例外をキャッチして `Result<T, JavaException>` にラップしてくれます。Java メソッドを呼ぶ標準的な方法ですね:
 
 ```valen
 let result = safe { file.readString() };
 // result: Result<String?, JavaException>
 ```
 
-Java メソッドが成功すれば `Ok(value)` を取得。投げれば `Err(JavaException)` を取得。Java の戻り値は自動的に `T?`（nullable）として型付けされる。Java メソッドは常に null を返す可能性があるため。
+Java メソッドが成功すれば `Ok(value)` を、投げれば `Err(JavaException)` を取得します。Java の戻り値は自動的に `T?`（nullable）として型付けされます。Java メソッドは常に null を返す可能性があるので。
 
 ### 省略記法: `safe expr`
 
-ワンライナーなら中括弧を省略:
+ワンライナーなら中括弧を省略できます:
 
 ```valen
 let r = safe file.readString();  // Result<String?, JavaException>
@@ -27,7 +27,7 @@ let r = safe file.readString();  // Result<String?, JavaException>
 
 ### `safe?` — 早期リターンとの組み合わせ
 
-`safe? expr` は `safe { expr }?` を一発で — メソッドを呼び、例外をラップし、`?` でアンラップ:
+`safe? expr` は `safe { expr }?` を一発で — メソッドを呼んで、例外をラップして、`?` でアンラップ:
 
 ```valen
 fn read_content(path: String) -> Result<String?, JavaException> {
@@ -39,31 +39,31 @@ fn read_content(path: String) -> Result<String?, JavaException> {
 
 ## `unsafe { }` ブロック
 
-`unsafe` ブロックを使うと、Valen が通常禁止する操作を実行できる:
+`unsafe` ブロックを使うと、Valen が通常禁止する操作を実行できます:
 
 ```valen
 let pos: Position = unsafe { obj as Position };
 ```
 
-ブロックは式 — 最後の式の値に評価される。
+ブロックは式 — 最後の式の値に評価されます。
 
 ### 省略記法
 
-単一式なら中括弧を省略できる:
+単一式なら中括弧を省略できます:
 
 ```valen
 let pos: Position = unsafe obj as Position;
 ```
 
-同じ意味、句読点が少ないだけ。
+意味は同じ、句読点が少ないだけ。
 
 ## `unsafe` 内で許されること
 
-`unsafe` ブロック内では3つのことが可能になる:
+`unsafe` ブロック内では3つのことが可能になります:
 
 ### 1. 未検査ダウンキャスト
 
-通常、`obj as ConcreteType` は安全な変換（数値の拡張など）にのみ許可される。`unsafe` 内ではセーフティネットなしでダウンキャストできる:
+通常、`obj as ConcreteType` は安全な変換（数値の拡張など）にのみ許可されます。`unsafe` 内ならセーフティネットなしでダウンキャストできます:
 
 ```valen
 let shape: Any = get_something();
@@ -73,7 +73,7 @@ let circle: Circle = unsafe { shape as Circle };
 
 ### 2. 例外処理のスキップ
 
-`unsafe` 内の Java メソッド呼び出しは例外ラッピングを受けない。メソッドが投げると、例外はそのまま伝搬する — `Result` なし、`Err` なし、ただのクラッシュ:
+`unsafe` 内の Java メソッド呼び出しは例外ラッピングを受けません。メソッドが投げたら、例外はそのまま伝搬します — `Result` なし、`Err` なし、ただのクラッシュ:
 
 ```valen
 // safe 版 — 例外が Result になる
@@ -85,7 +85,7 @@ let content: String = unsafe { file.readString() };  // String（か爆発）
 
 ### 3. Null を非 Null として扱う
 
-`unsafe` 内では Java の戻り値は非 nullable として扱われる。メソッドが実際に null を返すと NPE になる:
+`unsafe` 内では Java の戻り値は非 nullable として扱われます。メソッドが実際に null を返すと NPE になりますよ:
 
 ```valen
 // safe 版 — null が T? になる
@@ -97,7 +97,7 @@ let val: String = unsafe { map.get("key") };  // キーがなければ NPE
 
 ## `unsafe fn`
 
-関数全体が unsafe 領域で動作する場合、関数自体をマークする:
+関数全体が unsafe 領域で動作する場合、関数自体をマークできます:
 
 ```valen
 unsafe fn rawAccess(ptr: Long) -> Int {
@@ -107,13 +107,13 @@ unsafe fn rawAccess(ptr: Long) -> Int {
 }
 ```
 
-注意点: `unsafe fn` の呼び出しには呼び出し側で `unsafe` ブロックが**必要**:
+ここは注意してほしいんですが、`unsafe fn` の呼び出しには呼び出し側で `unsafe` ブロックが**必須**です:
 
 ```valen
 let v = unsafe { rawAccess(ptr) };
 ```
 
-これにより `unsafe fn` の呼び出しがすべて可視化・監査可能になる。コードレビュアーは `unsafe` を grep するだけで保証が緩和されている箇所をすべて見つけられる。
+こうすることで `unsafe fn` の呼び出しがすべて可視化・監査可能になります。コードレビュアーは `unsafe` を grep するだけで、保証が緩和されている箇所を全部見つけられるんです。
 
 ## `safe` vs `unsafe` 比較
 
@@ -126,20 +126,20 @@ let v = unsafe { rawAccess(ptr) };
 
 ## `unsafe` を使うタイミング
 
-短い答え: **ほぼ使わない**。正当なケース:
+短い答え: **ほぼ使わない**。正当なケースは:
 
-- **型を既に検査済み**で、安全なダウンキャストが冗長になる場合
-- **Java API をラップ**していて、自分の使い方では null を返さず投げないことを検証済みの場合
+- **型を既に検査済み**で、安全なダウンキャストが冗長な場合
+- **Java API をラップ**していて、自分の使い方では null を返さず投げないと検証済みの場合
 - **パフォーマンスクリティカルなホットパス**で `Result`/`Option` のオーバーヘッドが本当に問題になる場合（まず計測！）
 
 ## `unsafe` を使わないべき時
 
-- 「この Java メソッドは null を返さないと思う」 — 間違っている、`safe` を使う
-- 「例外処理が冗長すぎる」 — `safe?` 省略記法を代わりに使う
-- 「Option の match が書きたくない」 — `unwrapOr` か `map` を使う
+- 「この Java メソッドは null を返さないと思う」 — たぶん間違ってます、`safe` を使いましょう
+- 「例外処理が冗長すぎる」 — `safe?` 省略記法を使ってみてください
+- 「Option の match が書きたくない」 — `unwrapOr` か `map` がありますよ
 
 ::: warning 小さく保つ
-`unsafe` ブロックはできるだけ狭く — 理想的には式1つ。20行のコードを `unsafe { ... }` で囲んでいるなら再考を。目標は危険な操作を分離することであり、安全システムを丸ごと無効化することではない。
+`unsafe` ブロックはできるだけ狭くしてください — 理想的には式1つ。20行のコードを `unsafe { ... }` で囲んでいるなら再考を。目標は危険な操作を分離することであって、安全システムを丸ごと無効化することじゃありません。
 :::
 
 ## クイックリファレンス

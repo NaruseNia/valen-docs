@@ -1,10 +1,10 @@
 # クラスと Data Class
 
-オブジェクト指向言語にはクラスがある。Valenの特徴は、コンストラクタがクラス名の直後に置かれること、`new` キーワードが存在しないこと、そしてコンパイラがすべてをデフォルトでイミュータブルかつ `internal` として扱うこと。成功のピットへようこそ。
+オブジェクト指向言語にはクラスがありますよね。Valen のちょっと変わったところは、コンストラクタがクラス名の直後にくること、`new` キーワードがないこと、そしてコンパイラがデフォルトですべてをイミュータブル＆ `internal` として扱うこと。成功のピットへようこそ。
 
 ## プライマリコンストラクタ
 
-クラスのコンストラクタ引数はクラス名の直後に置く。`constructor` ブロックも `init` ボディも不要 — 括弧を書くだけで完了。
+コンストラクタの引数はクラス名の直後に書きます。`constructor` ブロックも `init` ボディも要りません — 括弧を書くだけ。
 
 ```valen
 class User(pub name: String, mut age: Int) {
@@ -14,17 +14,17 @@ class User(pub name: String, mut age: Int) {
 }
 ```
 
-これは2つのフィールドを持つクラス: `name` はパブリック読み取り可能、`age` は内部的にミュータブル。インスタンス生成はいたってシンプル:
+フィールドが2つあるクラスです。`name` はパブリック読み取り可能、`age` は内部的にミュータブル。インスタンス生成はとてもシンプル:
 
 ```valen
 let alice = User(name = "Alice", age = 30);
 ```
 
-`new` なし。儀式なし。名前付き引数で関数のようにクラスを呼ぶだけ。
+`new` なし。儀式なし。名前付き引数で関数みたいにクラスを呼ぶだけですね。
 
 ## フィールドの可視性
 
-コンストラクタ引数はすべてフィールドになる。アクセスは修飾子で制御する — `pub`、`internal`、`private`、`mut` — 可視性が先、次に `mut`:
+コンストラクタ引数はすべてフィールドになります。アクセス制御は修飾子で — `pub`、`internal`、`private`、`mut` の順で、可視性が先、次に `mut`:
 
 | 修飾子         | 外部からの読み取り | 外部からの書き込み | 内部でミュータブル |
 |----------------|-------------------|--------------------|----------------|
@@ -37,7 +37,7 @@ let alice = User(name = "Alice", age = 30);
 | `private mut`  | 不可              | 不可               | 可             |
 | `mut`          | 同一パッケージのみ | 同一パッケージのみ  | 可             |
 
-デフォルト（修飾子なし）は `internal` — 同一パッケージ内では見えるが外部からは隠される。これは意図的な設計で、Valenはまず妥当なカプセル化レベルへ誘導する。
+修飾子なしのデフォルトは `internal` です。同一パッケージ内からは見えるけど、外部からは隠れます。これは意図的な設計で、Valen はまず妥当なカプセル化レベルに誘導してくれるんですよ。
 
 ```valen
 class Config(
@@ -65,11 +65,11 @@ cfg.retries = 5;         // OK
 
 ## メソッド
 
-メソッドはクラス本体に直接書くことも、別の `impl` ブロックに書くこともできる。どちらも同等に機能する。
+メソッドはクラス本体に直接書いても、別の `impl` ブロックに書いてもOKです。どちらも同じように動きます。
 
 ### インスタンスメソッド
 
-最初の引数に `self` を取る関数がインスタンスメソッド。ドット構文で呼び出す。
+最初の引数に `self` を取る関数がインスタンスメソッド。ドット構文で呼び出します。
 
 ```valen
 class Counter(pub mut count: Int) {
@@ -88,13 +88,13 @@ println(c.current());  // 1
 ```
 
 - `self` — イミュータブルなレシーバ（フィールドは読み取り専用）
-- `mut self` — ミュータブルなレシーバ（フィールドを変更可能）
+- `mut self` — ミュータブルなレシーバ（フィールドを変更できる）
 
-`mut self` を書き忘れてフィールドを変更しようとすると、コンパイラが丁重に拒否する。ちゃんと見守ってくれている。
+`mut self` を書き忘れてフィールドを変更しようとすると、コンパイラが丁重に怒ってくれます。ちゃんと見守ってくれてるんですね。
 
 ### 関連関数
 
-`self` を持たない関数は関連関数。`::` 構文で呼び出す。Javaの `static` と同じ概念だがキーワードは不要。
+`self` を持たない関数は関連関数です。`::` 構文で呼び出します。Java の `static` と同じ発想ですが、キーワードは不要。
 
 ```valen
 class User(pub name: String, mut age: Int) {
@@ -111,11 +111,11 @@ let ghost = User::anonymous();   // 関連関数 — :: に注目
 println(ghost.greet());           // インスタンスメソッド — . に注目
 ```
 
-区別は純粋にパラメータリストに `self` があるかどうかだけ。Valenに `static` キーワードは存在しない。
+パラメータリストに `self` があるかどうか、それだけの違いです。Valen に `static` キーワードはありません。
 
 ### 固有 `impl` ブロック
 
-固有 `impl` ブロックを使って、クラス本体の*外側*にメソッドを追加できる。コードの整理や後からのメソッド追加に特に便利:
+固有 `impl` ブロックを使えば、クラス本体の*外側*にメソッドを追加できます。コードの整理や後からのメソッド追加に便利ですよ:
 
 ```valen
 class Foo(pub x: Int) {
@@ -128,11 +128,11 @@ impl Foo {
 }
 ```
 
-固有 `impl` ブロックで定義したメソッドはクラス本体のメソッドと同じ優先度を持つ。`enum` や `data class` 型（メソッドを持つクラス本体がない）では、固有 `impl` がメソッド追加の主要な手段。
+固有 `impl` ブロックで定義したメソッドは、クラス本体のメソッドと同じ優先度を持ちます。`enum` や `data class`（メソッドを持つクラス本体がない型）では、固有 `impl` がメソッド追加の主な手段になります。
 
 ## `derives` — メソッドの自動生成
 
-`equals`、`hashCode`、`toString` を手書き？ それが `derives` の出番。コンストラクタ（とスーパータイプ）の後、本体 `{` の前に配置する:
+`equals`、`hashCode`、`toString` を手書き？ それこそ `derives` の出番です。コンストラクタ（とスーパータイプ）の後、本体 `{` の前に配置します:
 
 ```valen
 class Foo(pub x: Int, pub y: Int) derives(Eq, Hash) {
@@ -158,12 +158,12 @@ enum Shape derives(Eq, Hash, Display) {
 | `Clone`   | `copy(...) -> Self` | 全フィールドをパラメータとするコピーコンストラクタ |
 
 ::: tip data class は自動で生成される
-`data class` は `derives(...)` を書かなくても `Eq`、`Hash`、`Display`、`Clone` を自動生成する。`derives` 句は主に `class` と `enum` 型向け。
+`data class` は `derives(...)` を書かなくても `Eq`、`Hash`、`Display`、`Clone` を自動生成します。`derives` 句は主に `class` と `enum` 向けですね。
 :::
 
 ## デフォルト引数
 
-コンストラクタ引数にはデフォルト値を設定でき、呼び出し側は不要な引数を省略できる:
+コンストラクタ引数にはデフォルト値を設定できて、呼び出し側は不要な引数を省略できます:
 
 ```valen
 class HttpClient(
@@ -186,11 +186,11 @@ let impatient = HttpClient(
 // retries はデフォルトの 3 のまま
 ```
 
-名前付き引数とデフォルト値はうまく連携する — デフォルトを持つ引数は順序を問わず省略できる。
+名前付き引数とデフォルト値はうまく連携します。デフォルトを持つ引数は順序を問わず省略できますよ。
 
 ## Data Class
 
-データの入れ物として `equals`、`hashCode`、`toString`、`copy` が欲しいだけなら `data class` を使う。末尾のセミコロンに注目 — data class にはボディが不要。
+データの入れ物として `equals`、`hashCode`、`toString`、`copy` が欲しいだけなら `data class` を使いましょう。末尾のセミコロンに注目 — data class にはボディが要りません。
 
 ```valen
 data class Point(pub x: Float, pub y: Float);
@@ -198,7 +198,7 @@ data class Point(pub x: Float, pub y: Float);
 data class User(pub name: String, pub email: String);
 ```
 
-コンパイラが自動生成するもの:
+コンパイラが自動生成してくれるもの:
 
 - **`equals`** — 全フィールドの構造的比較
 - **`hashCode`** — 全フィールドに基づく一貫したハッシュ
@@ -216,7 +216,7 @@ let p3 = p1.copy(x = 3.0f);
 println(p3);    // Point(x=3.0, y=2.0)
 ```
 
-固有 `impl` ブロックや trait `impl` ブロックで data class にメソッドを追加できる:
+固有 `impl` ブロックや trait `impl` ブロックで data class にメソッドを追加できます:
 
 ```valen
 data class Vec2(pub x: Float, pub y: Float);
@@ -232,14 +232,14 @@ impl Display for Vec2 {
 
 ### Data Class の制約
 
-- data class は常に **final** — `open` や `abstract` にできない
-- スーパークラスにはなれない
-- 構文的には `: SuperClass(args)` と書けるが、これは**既知の制限** — スーパータイプ情報はコンパイル時に失われ、data class は常に `java.lang.Object` を直接継承する。将来のリリースで修正予定。
-- trait は `impl Trait for DataClass { ... }` で実装*できる*
+- data class は常に **final** — `open` や `abstract` にはできません
+- スーパークラスにもなれません
+- 構文的には `: SuperClass(args)` と書けますが、これは**既知の制限**です。スーパータイプ情報はコンパイル時に失われて、data class は常に `java.lang.Object` を直接継承します。将来のリリースで修正予定。
+- trait は `impl Trait for DataClass { ... }` で実装*できます*
 
 ## 継承
 
-クラスはデフォルトで **final**。拡張可能にしたい場合は明示的にオプトインが必要。
+クラスはデフォルトで **final** です。拡張可能にしたい場合は、明示的にオプトインが必要。
 
 ### Open クラス
 
@@ -259,9 +259,9 @@ class Dog(pub name: String) : Animal(name) {
 
 ポイント:
 - `: ParentClass(args)` で継承
-- メソッドもデフォルトで final — オーバーライド可能なものは `open fn` を付ける
-- サブクラスは `override fn` を使う必要がある（忘れるとコンパイルエラー。サイレントなバグにはならない）
-- `open` は伝搬しない — `open class Dog` と書かない限り `Dog` は final
+- メソッドもデフォルトで final — オーバーライドさせたいものには `open fn` を付ける
+- サブクラスは `override fn` が必須（忘れるとコンパイルエラー。サイレントなバグにはなりません）
+- `open` は伝搬しません — `open class Dog` と書かない限り `Dog` は final のまま
 
 ### Abstract クラス
 
@@ -284,12 +284,12 @@ class Circle(pub r: Float) : Shape() {
 ```
 
 ::: warning 既知の制限: abstract メソッドにもボディが必要
-パーサは現在、`abstract` メソッドを含むすべてのメソッドにボディを要求する。abstract メソッドにはプレースホルダボディ（`{ /* placeholder */ }` など）を提供する必要がある。将来のパーサ更新でボディなしの `abstract fn area(self) -> Float;` 構文をサポート予定。
+パーサは現在、`abstract` メソッドを含むすべてのメソッドにボディを要求します。abstract メソッドにはプレースホルダボディ（`{ /* placeholder */ }` など）を置いてください。将来のパーサ更新でボディなしの `abstract fn area(self) -> Float;` 構文をサポート予定です。
 :::
 
 ### Sealed クラス
 
-`sealed class` はサブタイプの閉じた集合を定義する。コンパイラがすべてのサブタイプを把握するため、網羅的な `match` が可能:
+`sealed class` はサブタイプの閉じた集合を定義します。コンパイラがすべてのサブタイプを知っているので、網羅的な `match` ができるんです:
 
 ```valen
 sealed class Payment;
@@ -311,13 +311,13 @@ fn describe(payment: Payment) -> String {
 ```
 
 sealed class のルール:
-- すべてのサブタイプは同一モジュール内で定義する必要がある
+- すべてのサブタイプは同一モジュール内で定義する必要あり
 - サブタイプは `class` または `data class`
 - 各サブタイプは独自のフィールド、メソッド、trait 実装を持てる
 
 ### Super 呼び出し
 
-サブクラスは `super` で親メソッドを呼び出せる:
+サブクラスは `super` で親メソッドを呼べます:
 
 ```valen
 open class Animal(pub name: String) {
@@ -334,9 +334,9 @@ class Dog(pub name: String) : Animal(name) {
 }
 ```
 
-`super.foo()` は親*クラス*のメソッドのみを呼び出す。trait のデフォルトメソッドを呼ぶには UFCS: `Trait::foo(self)` を使う。
+`super.foo()` は親*クラス*のメソッドだけを呼びます。trait のデフォルトメソッドを呼ぶには UFCS: `Trait::foo(self)` を使ってください。
 
-## Javaからの移行
+## Java からの移行
 
 | Java                          | Valen                                  |
 |-------------------------------|----------------------------------------|

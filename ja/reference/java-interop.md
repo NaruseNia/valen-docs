@@ -1,6 +1,6 @@
 # Java 連携
 
-Valen は JVM 上で動作し、Java ライブラリを直接利用できる。このページでは Java コードとの相互運用のルールとメカニズムを説明する。
+Valen は JVM 上で動作し、Java ライブラリを直接利用できます。このページでは Java コードとの相互運用のルールとメカニズムを説明します。
 
 ## Import 構文
 
@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap as CMap;
 
 ## コンストラクタ呼び出し
 
-Java コンストラクタには `safe` や `unsafe` ラッパーが**不要**。コンストラクタは常に非 null を返し、スローした場合はオブジェクトが生成されない。
+Java コンストラクタには `safe` や `unsafe` ラッパーが**不要**です。コンストラクタは常に非 null を返し、スローした場合はオブジェクトが生成されません。
 
 ```valen
 let list = ArrayList();
@@ -27,7 +27,7 @@ let map = HashMap<String, Int>();
 
 ## メソッド呼び出し
 
-すべての Java メソッド呼び出しは `safe` または `unsafe` でラップすべき。
+すべての Java メソッド呼び出しは `safe` または `unsafe` でラップしてください。
 
 | モード | 戻り型 | 例外 | null |
 |---|---|---|---|
@@ -38,7 +38,7 @@ let map = HashMap<String, Int>();
 | `unsafe expr` | `T` (non-nullable) | パススルー | NPE リスク |
 
 ::: warning 将来
-素の Java メソッド呼び出し（`safe` も `unsafe` もなし）はコンパイルエラーにする予定だが、**この制限は現在強制されていない**。素の呼び出しは正常にコンパイルされる。将来のバージョンで拒否予定。
+素の Java メソッド呼び出し（`safe` も `unsafe` もなし）はコンパイルエラーにする予定ですが、**この制限はまだ強制されていません**。素の呼び出しは正常にコンパイルされます。将来のバージョンで拒否予定です。
 :::
 
 ```valen
@@ -56,7 +56,7 @@ let raw: String = unsafe { file.readString() };
 
 ### `T?` は Nullable JVM 型
 
-Valen の `T?` は **nullable JVM 型**（`Ty::Nullable`）を表す。`Option<T>` **ではない**。型システム上まったく別の型:
+Valen の `T?` は **nullable JVM 型**（`Ty::Nullable`）を表します。`Option<T>` **ではありません**。型システム上まったく別の型です。
 
 | 型 | 内部表現 | 用途 |
 |---|---|---|
@@ -65,7 +65,7 @@ Valen の `T?` は **nullable JVM 型**（`Ty::Nullable`）を表す。`Option<T
 
 ### `safe { }` 内の Java メソッド戻り値
 
-`safe { }` 内のすべての Java メソッド戻り値は `T?`（nullable）として型付けされる。プラットフォーム型（`T!`）は存在しない — Java の値は常に null の可能性ありとして扱われる。
+`safe { }` 内のすべての Java メソッド戻り値は `T?`（nullable）として型付けされます。プラットフォーム型（`T!`）は存在しません。Java の値は常に null の可能性ありとして扱われます。
 
 ```valen
 // Java: V Map.get(K key) — null を返す可能性あり
@@ -78,11 +78,11 @@ match val {
 }
 ```
 
-`void` メソッドは `Unit` を返す（nullable ではない）。
+`void` メソッドは `Unit` を返します（nullable ではない）。
 
 ## コレクションのイテレーション
 
-`Iterable` を実装する Java 型（`ArrayList`、`HashSet`、`LinkedList` 等）は `for` ループで直接使用可能。要素型は `Any`。
+`Iterable` を実装する Java 型（`ArrayList`、`HashSet`、`LinkedList` 等）は `for` ループで直接使えます。要素型は `Any` です。
 
 ```valen
 import java.util.ArrayList;
@@ -96,11 +96,11 @@ for item in list {
 }
 ```
 
-内部的に `.iterator()` → `hasNext()` / `next()` にデシュガーされる。
+内部的に `.iterator()` → `hasNext()` / `next()` にデシュガーされます。
 
 ## `@valen.Closed`
 
-Java の `sealed` 階層に対する網羅的 `match` を有効にする。Java ライブラリ作者が適用する。
+Java の `sealed` 階層に対する網羅的 `match` を有効にします。Java ライブラリ作者が適用します。
 
 | シナリオ | `match` の動作 |
 |---|---|
@@ -122,11 +122,11 @@ match color {
 }
 ```
 
-詳細は[アノテーション](/ja/reference/annotations)を参照。
+詳しくは[アノテーション](/ja/reference/annotations)を参照してください。
 
 ## クラスパス設定
 
-`valenc` は型情報のために Java の `.class` ファイルをクラスパスから読み取る。
+`valenc` は型情報のために Java の `.class` ファイルをクラスパスから読み取ります。
 
 | ソース | 仕組み |
 |---|---|
@@ -155,4 +155,4 @@ inline fn <reified T> isInstance(value: Any) -> Bool {
 boolean result = ValenClass.isInstance(obj);
 ```
 
-`reified` の恩恵を受けるには、Valen コードから呼び出す。
+`reified` の恩恵を受けるには、Valen コードから呼び出してください。

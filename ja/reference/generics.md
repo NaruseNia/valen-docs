@@ -2,7 +2,7 @@
 
 ## 宣言構文
 
-型パラメータは `<T>` 山括弧構文を使い、パラメータ化する名前の後に配置する。
+型パラメータは `<T>` 山括弧構文を使い、パラメータ化する名前の後に配置します。
 
 ### 関数
 
@@ -44,7 +44,7 @@ enum Tree<T> {
 
 ## 境界
 
-型パラメータに特定の trait 実装を要求する制約。
+型パラメータに特定の trait 実装を要求する制約です。
 
 | 構文 | 意味 |
 |---|---|
@@ -59,19 +59,19 @@ fn print_value<T: Display>(value: T) {
 fn process<T: System + EventHandler>(system: T, world: World) -> Unit { ... }
 ```
 
-境界はクラスの型パラメータにも使用可能:
+境界はクラスの型パラメータにも使えます。
 
 ```valen
 class SortedList<T: Comparable>(mut items: List<T>) { ... }
 ```
 
 ::: info
-**`where` 句はサポートされていない。** すべての境界は型パラメータの宣言位置でインラインに宣言する必要がある（`T: Bound`）。`where T: Bound` 構文は存在しない。
+**`where` 句はサポートされていません。** すべての境界は型パラメータの宣言位置でインラインに宣言する必要があります（`T: Bound`）。`where T: Bound` 構文は存在しません。
 :::
 
 ## 変性
 
-型パラメータの宣言位置で指定する。サブタイピングの方向を制御する。
+型パラメータの宣言位置で指定します。サブタイピングの方向を制御します。
 
 | アノテーション | 名前 | 意味 | Kotlin | Java |
 |---|---|---|---|---|
@@ -90,12 +90,12 @@ class Consumer<in T> {
 ```
 
 ::: warning
-**変性はパースされるが強制されない。** パーサーは `out` と `in` アノテーションを認識し `Variance::Covariant` / `Variance::Contravariant` として格納するが、型チェッカーは変性制約を**検証しない**。例えば、`out T` を入力位置で使用してもエラーなしでコンパイルされる。強制は将来のフェーズで予定。
+**変性はパースされますが強制されません。** パーサーは `out` と `in` アノテーションを認識し `Variance::Covariant` / `Variance::Contravariant` として格納しますが、型チェッカーは変性制約を**検証しません**。たとえば、`out T` を入力位置で使ってもエラーなしでコンパイルされます。強制は将来のフェーズで予定されています。
 :::
 
 ## 明示的型引数
 
-推論が不十分な場合、呼び出し側で型引数を明示的に指定できる。
+推論が不十分な場合、呼び出し側で型引数を明示的に指定できます。
 
 ```valen
 let list = ArrayList<String>();
@@ -104,11 +104,11 @@ let x = parse<Int>("42");
 let items = iter(list).collect<List<String>>();
 ```
 
-推論が成功する場合、型引数はオプション。
+推論が成功する場合、型引数はオプションです。
 
 ## reified 型パラメータ
 
-`reified T` は各呼び出し側で具体型を代入し、ランタイムで型情報を保持する。`inline fn` でのみ利用可能。
+`reified T` は各呼び出し側で具体型を代入し、ランタイムで型情報を保持します。`inline fn` でのみ利用できます。
 
 ```valen
 inline fn <reified T> isInstance(value: Any) -> Bool {
@@ -128,7 +128,7 @@ let b = isInstance<Int>("hello");     // false
 | クラスリテラル | `T::class` | `ldc ConcreteType.class` | **未実装** |
 
 ::: warning
-`T::class` はまだサポートされていない。reified 型パラメータでは `is` と `as` 操作のみ動作する。
+`T::class` はまだサポートされていません。reified 型パラメータでは `is` と `as` 操作のみ動作します。
 :::
 
 ### 制約
@@ -142,7 +142,7 @@ let b = isInstance<Int>("hello");     // false
 
 ## JVM での型イレイジャー
 
-非 reified の型パラメータはランタイムでイレイジャーされ、JVM ジェネリクスと一致する。
+非 reified の型パラメータはランタイムでイレイジャーされ、JVM ジェネリクスと一致します。
 
 - コンパイル時: パラメータ化された型による完全な型チェック
 - ランタイム: 型パラメータは境界（または `Object`）にイレイジャーされる
@@ -155,4 +155,4 @@ let b: Box<String> = Box(value = "hello");
 // ランタイム: 両方とも Box (型パラメータがイレイジャーされる)
 ```
 
-ランタイムで型情報を保持するには、`inline fn` と `reified` を使用する。
+ランタイムで型情報を保持するには、`inline fn` と `reified` を使ってください。

@@ -1,10 +1,10 @@
 # Hello, Valen
 
-実際のプログラムを書いてみよう。data class、enum、trait、パターンマッチ、失敗モデルなど、Valenの特徴を見せる小さなタスクトラッカーを作る。最後には、Valenのコードがどのように構成されるか、動くメンタルモデルが手に入る。
+実際のプログラムを書いてみましょう。data class、enum、trait、パターンマッチ、失敗モデルなど、Valenの特徴を見せる小さなタスクトラッカーを作ります。最後には、Valenのコードがどう構成されるか、動くメンタルモデルが手に入るはずです。
 
 ## プログラム全体
 
-まず全体を見てみよう。心配いらない — 各パーツは後で一つずつ解説する。
+まず全体を見てみましょう。心配いりません — 各パーツは後でひとつずつ解説します。
 
 ```valen
 package com.example.tasks;
@@ -86,7 +86,7 @@ fn main() {
 package com.example.tasks;
 ```
 
-すべてのValenファイルは `package` 宣言から始まる。必須だ — パッケージがなければコンパイルできない。パッケージはJavaと同じくディレクトリ構造にマッピングされる。ソースファイルは `.vln` 拡張子を使い、UTF-8でエンコードされている必要がある。
+すべてのValenファイルは `package` 宣言から始まります。これは必須です — パッケージがなければコンパイルできません。パッケージはJavaと同じくディレクトリ構造にマッピングされます。ソースファイルの拡張子は `.vln`、エンコーディングはUTF-8です。
 
 ### インポート
 
@@ -94,7 +94,7 @@ package com.example.tasks;
 import java.util.List;
 ```
 
-そう、Javaのインポートだ。そのまま動く。`List.of(...)` は内部で実際の `java.util.List.of()` を呼び出している。ラッパーもアダプターもボイラープレートもなし。これが「Javaエコシステムに乗る」ということの実際の姿だ。
+そう、Javaのインポートです。そのまま動きます。`List.of(...)` は内部で実際の `java.util.List.of()` を呼んでいます。ラッパーもアダプターもボイラープレートもなし。これが「Javaエコシステムに乗る」ということの実際の姿です。
 
 ### enum（ADT）
 
@@ -107,7 +107,7 @@ enum Priority {
 }
 ```
 
-おじいちゃんのJava enumとは**違う**。各バリアントはデータを持てる — `Critical` は `reason` 文字列を保持し、`Low`、`Medium`、`High` は何も持たない。これは正当な直和型であり、コンパイラは `Priority` が取りうるすべての形を正確に把握し、それらをすべて処理しているか確認する。
+おじいちゃんのJava enumとは**違います**。各バリアントはデータを持てます — `Critical` は `reason` 文字列を保持し、`Low`、`Medium`、`High` は何も持ちません。これはちゃんとした直和型で、コンパイラは `Priority` が取りうるすべての形を正確に把握して、それらをすべて処理しているか確認してくれます。
 
 ### data class
 
@@ -119,9 +119,9 @@ data class Task(
 );
 ```
 
-`data class` は `equals`、`hashCode`、`toString`、`copy` を自動生成する。また暗黙的に `Eq`、`Hash`、`Display`、`Clone` traitを満たす。`pub` キーワードはフィールドを外部から読み取り可能にする。なければフィールドはクラスに対してprivate。
+`data class` は `equals`、`hashCode`、`toString`、`copy` を自動生成します。暗黙的に `Eq`、`Hash`、`Display`、`Clone` traitも満たします。`pub` キーワードはフィールドを外部から読み取り可能にするもの。なければフィールドはクラスに対してprivateです。
 
-getterもsetterもない。`val` vs `var` の議論もない。`pub` で公開、何もなければprivate、可変性が必要なら `pub mut`。
+getterもsetterもありません。`val` vs `var` の議論もなし。`pub` で公開、何もなければprivate、可変性が必要なら `pub mut`。シンプル。
 
 ### trait
 
@@ -131,7 +131,7 @@ trait Summarize {
 }
 ```
 
-traitは共有の振る舞いを定義する。Rustのtraitやhaskellの型クラスを知っているなら、同じ概念だ。Java/Kotlinから来た人は、インターフェースだと思えばいい — ただし、誰が何に対して実装できるかについてより厳格なルールがある。
+traitは共有の振る舞いを定義します。Rustのtraitやhaskellの型クラスを知っているなら、同じ概念ですね。Java/Kotlinから来た人は、インターフェースだと思ってください — ただし、誰が何に対して実装できるかについて、より厳格なルールがあります。
 
 ### traitの実装
 
@@ -150,12 +150,12 @@ impl Summarize for Task {
 }
 ```
 
-いくつか注目すべき点:
+いくつか注目ポイントがあります:
 
-- **`impl Trait for Type`** はクラス/data classの本体の*外側*に書く。データ定義と振る舞いを分離する。
-- **`if` は式** — 値を返すので、`let status` に直接代入できる。
-- **`match` は網羅的** — 4つのアームが `Priority` の4つのバリアントすべてをカバーしている。1つ削除するとコンパイラが文句を言う。
-- **`f"..."`** はフォーマット文字列。`{...}` 内の式が展開される。
+- `impl Trait for Type` はクラス/data classの本体の*外側*に書きます。データ定義と振る舞いの分離ですね。
+- `if` は式です — 値を返すので、`let status` に直接代入できます。
+- `match` は網羅的 — 4つのアームが `Priority` の4つのバリアントすべてをカバーしています。1つ削除するとコンパイラが文句を言います。
+- `f"..."` はフォーマット文字列。`{...}` 内の式が展開されます。
 
 ### 関数とResult型
 
@@ -170,11 +170,11 @@ fn find_critical(tasks: List<Task>) -> Result<Task, String> {
 }
 ```
 
-この関数は `Result<Task, String>` を返す — タスクを含む `Ok` か、メッセージを含む `Err` のどちらか。例外もnullもなし。
+この関数は `Result<Task, String>` を返します — タスクを含む `Ok` か、メッセージを含む `Err` のどちらか。例外もnullもなし。
 
-`if let` はフル `match` を書かずに単一パターンを分解する。`_` は「reasonフィールドは今は気にしない」という意味。
+`if let` はフル `match` を書かずに単一パターンを分解するやり方です。`_` は「reasonフィールドは今は気にしない」という意味。
 
-最後の行に `return` がないことに注目 — Valenは式指向なので、ブロックの最後の式がその値になる。
+最後の行に `return` がないことに気づきましたか？ Valenは式指向なので、ブロックの最後の式がその値になります。
 
 ### main関数
 
@@ -197,13 +197,13 @@ fn main() {
 }
 ```
 
-`fn main()` がエントリーポイント。クラスのラッピングも、`static` も、`Array<String>` も不要 — トップレベル関数だけ。
+`fn main()` がエントリーポイントです。クラスのラッピングも、`static` も、`Array<String>` も不要 — トップレベル関数だけ。
 
-名前付き引数（`title = "Write docs"`）によりビルダーなしで構築が読みやすくなる。末尾の `match` は `Ok` と `Err` 両方のパスを処理する — もちろん網羅的に。
+名前付き引数（`title = "Write docs"`）のおかげで、ビルダーなしでも構築が読みやすくなっています。末尾の `match` は `Ok` と `Err` 両方のパスを処理します — もちろん網羅的に。
 
 ## コンパイルと実行
 
-コードを `src/com/example/tasks/main.vln` として保存し、以下を実行:
+コードを `src/com/example/tasks/main.vln` として保存して、以下を実行してください:
 
 ```sh
 valenc src/com/example/tasks/main.vln
@@ -222,7 +222,7 @@ Alert: Deploy to prod needs attention!
 
 ## まとめ
 
-約50行で、以下の機能を体験した:
+約50行で、以下の機能を体験しました:
 
 | 機能 | 使ったもの |
 |---|---|
@@ -238,7 +238,7 @@ Alert: Deploy to prod needs attention!
 
 ## 次のステップ
 
-全体像が見えたところで、詳細に掘り下げていこう:
+全体像が見えたところで、詳細に掘り下げていきましょう:
 
 - **[変数と型](/ja/guide/variables-and-types)** — プリミティブ、型推論、暗黙の変換がない理由
 - **[関数](/ja/guide/functions)** — 名前付き引数、デフォルトパラメータ、UFCS、`self` の仕組み

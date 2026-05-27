@@ -17,13 +17,13 @@
 | `Nothing` | —       | ⊥ (ボトム型、インスタンスなし)  | —          |
 | `Any`     | —       | `java.lang.Object`             | —          |
 
-- `Any` はトップ型。すべての型は暗黙的に `Any` のサブタイプ。`Any` へのアップキャストは暗黙的（プリミティブはボクシングされる）。
-- `Nothing` はボトム型。完了しない式（`panic`、無限 `loop`、`return`）の戻り型。
-- `Unit` はゼロ値型で `void` に相当。意味のある戻り値がない関数は `Unit` を返す。`-> Unit` の戻り型注釈はシグネチャから省略可能。Unit リテラルは `()`。
+- `Any` はトップ型です。すべての型は暗黙的に `Any` のサブタイプになり、`Any` へのアップキャストは暗黙的に行われます（プリミティブはボクシングされます）。
+- `Nothing` はボトム型です。完了しない式（`panic`、無限 `loop`、`return`）の戻り型として使われます。
+- `Unit` はゼロ値型で、`void` に相当します。意味のある戻り値がない関数は `Unit` を返します。`-> Unit` の戻り型注釈はシグネチャから省略できます。Unit リテラルは `()` です。
 
 ## サブタイピング規則
 
-型チェッカーは以下のサブタイピング関係を強制する:
+型チェッカーは以下のサブタイピング関係を適用します。
 
 | 規則 | 説明 |
 |------|------|
@@ -38,7 +38,7 @@ let x: Any = 42;           // Int → Any (暗黙的アップキャスト)
 let y: Int? = 42;           // Int → Int? (暗黙的アップキャスト)
 ```
 
-ダウンキャストには `unsafe` コンテキスト内での明示的な `as` キャストが必要。
+ダウンキャストには `unsafe` コンテキスト内での明示的な `as` キャストが必要です。
 
 ## 数値リテラル
 
@@ -56,13 +56,13 @@ let y: Int? = 42;           // Int → Int? (暗黙的アップキャスト)
 | `L`        | `Long` に昇格   | `42L`, `0xFFL` |
 | `f`        | `Float` に昇格  | `3.14f`  |
 
-- アンダースコア `_` セパレータは数値リテラル内のどこでも使用可能: `1_000_000`, `0xFF_FF`。
-- サフィックスなしの整数リテラルはデフォルトで `Int`（i32 範囲に収まる必要あり）。
-- サフィックスなしの浮動小数点リテラルはデフォルトで `Double`。
+- アンダースコア `_` セパレータは数値リテラル内のどこでも使えます: `1_000_000`, `0xFF_FF`
+- サフィックスなしの整数リテラルはデフォルトで `Int`（i32 範囲に収まる必要あり）
+- サフィックスなしの浮動小数点リテラルはデフォルトで `Double`
 
 ## 文字リテラル
 
-シングルクォートの文字リテラルは `Char` 値を生成する。
+シングルクォートの文字リテラルは `Char` 値を生成します。
 
 ```valen
 let a = 'A';
@@ -70,15 +70,15 @@ let newline = '\n';
 let nul = '\0';
 ```
 
-サポートされるエスケープシーケンス: `\n` `\t` `\r` `\\` `\'` `\0`。
+サポートされるエスケープシーケンス: `\n` `\t` `\r` `\\` `\'` `\0`
 
 ## 数値変換
 
-**暗黙的な数値変換は存在しない。** すべての変換は明示的なメソッド呼び出しが必要。
+**暗黙的な数値変換は存在しません。** すべての変換には明示的なメソッド呼び出しが必要です。
 
 ### 変換メソッド
 
-各型は以下に列挙された変換のみ提供する。列挙されていないメソッドの呼び出しはコンパイルエラー。
+各型は以下に列挙された変換のみを提供します。列挙されていないメソッドの呼び出しはコンパイルエラーになります。
 
 | 型 | 利用可能な変換メソッド |
 |------|------------------------------|
@@ -91,7 +91,7 @@ let nul = '\0';
 | `Char` | `.toInt()`, `.toLong()`, `.toFloat()`, `.toDouble()` |
 
 ::: warning
-`.toChar()` はどの型にも存在しない。`.toByte()` は `Short` のみ、`.toShort()` は `Byte` のみで利用可能。
+`.toChar()` はどの型にも存在しません。`.toByte()` は `Short` のみ、`.toShort()` は `Byte` のみで利用できます。
 :::
 
 ```valen
@@ -103,7 +103,7 @@ let w: Float = 42.toFloat();     // OK
 
 ### `as` による数値キャスト
 
-数値型間の明示的な `as` キャストも利用可能。数値間の `as` キャストはすべて安全（`unsafe` ブロック不要）。`Char` から数値へのキャストも安全。
+数値型間の明示的な `as` キャストも利用できます。数値間の `as` キャストはすべて安全で、`unsafe` ブロックは不要です。`Char` から数値へのキャストも安全です。
 
 ```valen
 let x = 42 as Long;    // OK (安全)
@@ -114,20 +114,20 @@ let c = 'A' as Int;    // OK (安全)
 
 ### `T?` と `Option<T>` は別の型
 
-Valen には値の不在を表す **2つの異なる** 表現がある:
+Valen には値の不在を表す **2つの異なる** 表現があります。
 
 | 型 | 内部表現 | 用途 |
 |------|-------------------------|---------|
-| `T?` | `Ty::Nullable(Box<Ty>)` | JVM null を許容する型。主に Java 連携用。 |
-| `Option<T>` | `enum Option<T> { Some(T), None }` | Valen ネイティブのオプショナル値。代数的データ型。 |
+| `T?` | `Ty::Nullable(Box<Ty>)` | JVM null を許容する型。主に Java 連携用 |
+| `Option<T>` | `enum Option<T> { Some(T), None }` | Valen ネイティブのオプショナル値。代数的データ型 |
 
 ::: danger 重要
-`T?` は `Option<T>` のシンタックスシュガー**ではない**。型システム上まったく別の型。`T?` は JVM の nullable 参照にマッピングされ、`Option<T>` は ADT enum。
+`T?` は `Option<T>` のシンタックスシュガー**ではありません**。型システム上まったく別の型です。`T?` は JVM の nullable 参照にマッピングされ、`Option<T>` は ADT enum です。
 :::
 
 ### `T?` の JVM マッピング
 
-`T?` はボックス化された JVM 型（null を保持できる参照型）にマッピングされる:
+`T?` はボックス化された JVM 型（null を保持できる参照型）にマッピングされます。
 
 | Valen 型 | JVM 型 |
 |------------|----------|
@@ -143,7 +143,7 @@ Valen には値の不在を表す **2つの異なる** 表現がある:
 
 ### `?` 演算子と Nullable
 
-`?` (try) 演算子は `Option<T>` と `Result<T, E>` にのみ対応。**`T?` (Nullable) には使用不可。**
+`?` (try) 演算子は `Option<T>` と `Result<T, E>` にのみ対応しています。**`T?` (Nullable) には使えません。**
 
 ```valen
 fn get_value() -> Option<Int> {
@@ -156,21 +156,21 @@ fn example() -> Option<Int> {
 }
 ```
 
-`?` を使用する場合、外側の関数の戻り型が一致する必要がある:
+`?` を使う場合、外側の関数の戻り型が一致する必要があります。
 - `Option<T>` に `?` → 関数は `Option<..>` を返す必要あり
 - `Result<T, E>` に `?` → 関数は `Result<..>` を返す必要あり
 
 ### `null` リテラルはない
 
-Valen に `null` リテラルは存在しない。JVM null は Nullable 型と Java 連携を通じてのみ扱う。
+Valen に `null` リテラルは存在しません。JVM null は Nullable 型と Java 連携を通じてのみ扱います。
 
 ### プラットフォーム型 (`T!`)
 
-`T!` は **未実装**（将来の検討のために予約）。ユーザーが記述することはできない。
+`T!` は **未実装** です（将来の検討のために予約）。ユーザーが記述することはできません。
 
 ## Option\<T\>
 
-`Option<T>` はオプショナル値のための標準ライブラリ ADT enum。
+`Option<T>` はオプショナル値のための標準ライブラリ ADT enum です。
 
 | バリアント    | 意味           |
 |---------------|----------------|
@@ -188,7 +188,7 @@ let missing: Option<Int> = .None;
 
 ## Result\<T, E\>
 
-`Result<T, E>` は回復可能な計算を表す。`E` は `Error` trait を実装する必要がある。
+`Result<T, E>` は回復可能な計算を表します。`E` は `Error` trait を実装する必要があります。
 
 | バリアント   | 意味                |
 |-------------|---------------------|
@@ -201,11 +201,11 @@ fn parse(s: String) -> Result<Int, ParseError> {
 }
 ```
 
-`?` 演算子は `Err` を早期リターンで伝播する。詳細は[エラー処理](/ja/guide/error-handling)を参照。
+`?` 演算子は `Err` を早期リターンで伝播します。詳しくは[エラー処理](/ja/guide/error-handling)を参照してください。
 
 ## ref mut T
 
-`ref mut T` は `T` への可変参照。`T` と `ref mut T` の間に暗黙的な変換はない。
+`ref mut T` は `T` への可変参照です。`T` と `ref mut T` の間に暗黙的な変換はありません。
 
 | 構文            | 意味                       |
 |-----------------|----------------------------|
@@ -223,7 +223,7 @@ increment(ref mut n);
 // n == 11
 ```
 
-`ref mut T` は Valen 内部専用で、Java メソッドに渡すことはできない。
+`ref mut T` は Valen 内部専用で、Java メソッドに渡すことはできません。
 
 ### JVM 実装
 
@@ -240,12 +240,12 @@ increment(ref mut n);
 | `ref mut T` (オブジェクト) | `valen/core/Ref` | |
 
 ::: info
-`ref mut Byte`、`ref mut Short`、`ref mut Char` はすべて `ref mut Int` と `valen/core/IntRef` を共有する。
+`ref mut Byte`、`ref mut Short`、`ref mut Char` はすべて `ref mut Int` と `valen/core/IntRef` を共有しています。
 :::
 
 ## ジェネリクス
 
-Valen のジェネリクスは `<T>` 構文と JVM イレイジャーセマンティクスを使用する。
+Valen のジェネリクスは `<T>` 構文と JVM イレイジャーセマンティクスを使います。
 
 ```valen
 class Box<T>(val value: T) {}
@@ -257,7 +257,7 @@ fn <T> identity(x: T) -> T {
 
 ### 変性アノテーション (`in`/`out`)
 
-`in` (反変) と `out` (共変) のアノテーションは構文的には受け付けるが、型チェッカーによる**強制は現在行われていない**。パーサーは記録するが、変性制約のチェックは実行されない。強制は将来のフェーズで予定。
+`in` (反変) と `out` (共変) のアノテーションは構文的には受け付けますが、型チェッカーによる**強制はまだ行われていません**。パーサーは記録しますが、変性制約のチェックは実行しません。強制は将来のフェーズで予定されています。
 
 ```valen
 // 構文的には有効だが、変性は未強制
@@ -269,7 +269,7 @@ trait Consumer<in T> {
 
 ### reified 型パラメータ
 
-`inline fn` の `reified T` は JVM イレイジャーを通じて具体型を保持し、ランタイムの型操作を可能にする。
+`inline fn` の `reified T` は JVM イレイジャーを通じて具体型を保持し、ランタイムでの型操作を可能にします。
 
 ```valen
 inline fn <reified T> isInstance(value: Any) -> Bool {
@@ -284,7 +284,7 @@ inline fn <reified T> isInstance(value: Any) -> Bool {
 
 ### 明示的型引数
 
-呼び出し側で型引数を明示的に指定できる:
+呼び出し側で型引数を明示的に指定できます。
 
 ```valen
 let list = ArrayList<String>();
@@ -307,7 +307,7 @@ let eid = EntityId(42);
 ```
 
 ::: warning
-`.value()` ゲッターは JVM バイトコードレベルで生成されるが、型チェッカーレベルでの `.value()` の解決は未実装。現在のコンパイラでは `.value()` の呼び出しが型チェックエラーになる可能性がある。
+`.value()` ゲッターは JVM バイトコードレベルで生成されますが、型チェッカーレベルでの `.value()` の解決はまだ実装されていません。現在のコンパイラでは `.value()` の呼び出しが型チェックエラーになる場合があります。
 :::
 
 ## 等値演算子
@@ -328,7 +328,7 @@ a === b   // true または false (JVM の文字列インターニングに依�
 
 ## `safe {}` ブロック
 
-`safe {}` は Java 例外をキャッチし、`Result<T, JavaException>` を返す。
+`safe {}` は Java 例外をキャッチし、`Result<T, JavaException>` を返します。
 
 ```valen
 let result = safe {
@@ -337,7 +337,7 @@ let result = safe {
 // result: Result<ReturnType, JavaException>
 ```
 
-`JavaException` は標準ライブラリの data class:
+`JavaException` は標準ライブラリの data class です。
 
 ```valen
 pub data class JavaException(
@@ -346,11 +346,11 @@ pub data class JavaException(
 );
 ```
 
-`JavaException` は `Error` trait を実装している。
+`JavaException` は `Error` trait を実装しています。
 
 ## data class の暗黙的 trait 充足
 
-`data class` は以下の trait 境界を暗黙的に充足する（明示的な `derives(...)` や `impl` は不要）:
+`data class` は以下の trait 境界を暗黙的に充足します（明示的な `derives(...)` や `impl` は不要です）。
 
 - `Eq`
 - `Hash`
@@ -369,9 +369,9 @@ compare(Point(1, 2), Point(1, 2));  // OK: Point は暗黙的に Eq を充足
 
 ## タプル型 (予約)
 
-`(A, B, C)` タプル構文は AST に予約されているが、**現在は使用不可**。HIR では `Ty::Error` にローワリングされる。
+`(A, B, C)` タプル構文は AST に予約されていますが、**現在は使えません**。HIR では `Ty::Error` にローワリングされます。
 
-代わりに `data class` または標準ライブラリの `Pair<A, B>` を使用:
+代わりに `data class` または標準ライブラリの `Pair<A, B>` を使ってください。
 
 ```valen
 let p = Pair(42, "hello");  // Pair<Int, String>

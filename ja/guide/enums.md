@@ -1,6 +1,6 @@
 # Enum（代数的データ型）
 
-Javaの `enum` がバリアントごとに異なるデータを持てたらと思ったことがあるなら、これは気に入るはず。Valenの `enum` は完全な代数的データ型 — 各バリアントが独自のペイロードを持てる直和型。言語の四本柱の一つであり、一度慣れたらプレーンなenumに戻るのはガラケーに戻るようなもの。
+Java の `enum` でバリアントごとに違うデータを持てたらなあ、と思ったことありませんか？ それなら Valen の `enum` は気に入るはずです。完全な代数的データ型 — 各バリアントが独自のペイロードを持てる直和型。言語の四本柱の一つで、正直これに慣れたらプレーンな enum に戻るのはガラケーに戻るような感覚ですよ。
 
 ## Enum の定義
 
@@ -16,11 +16,11 @@ enum Shape {
 - `Rect` は幅と高さを持つ
 - `Point` は何も持たない — ただのタグ
 
-以上。クラス階層も、Visitorパターンも、ファクトリメソッドも不要。型システムがどのバリアントが存在するかを正確に把握し、コンパイラがすべてを処理することを強制する。
+以上です。クラス階層も、Visitor パターンも、ファクトリメソッドも不要。型システムがどのバリアントが存在するか正確に把握していて、コンパイラがすべてを処理することを強制してくれます。
 
 ## バリアントの生成
 
-`::` スコープ演算子でバリアントを生成する。ペイロードフィールドは名前付き引数を使う:
+`::` スコープ演算子でバリアントを生成します。ペイロードフィールドは名前付き引数で:
 
 ```valen
 let circle = Shape::Circle(r = 5.0);
@@ -30,7 +30,7 @@ let point = Shape::Point;
 
 ### バリアントの省略記法
 
-コンパイラがどの enum かを既に把握している場合（型注釈、戻り値型、match の対象から）、enum 名を省略してドット構文を使える:
+コンパイラがどの enum かを既に知っている場合（型注釈、戻り値型、match の対象から推論）、enum 名を省略してドット構文が使えます:
 
 ```valen
 let c: Shape = .Circle(r = 5.0);   // Shape::Circle(r = 5.0)
@@ -41,9 +41,9 @@ fn origin() -> Shape {
 }
 ```
 
-この省略記法は期待される型が分かっている場所ならどこでも使える — 変数宣言、関数引数、return 式、match アーム。コンパイラが型を特定できない場合は、完全な `Shape::Circle(...)` 形式の使用を求められる。
+この省略記法は期待される型がわかっている場所ならどこでも使えます — 変数宣言、関数引数、return 式、match アーム。コンパイラが型を特定できない場合は、完全な `Shape::Circle(...)` 形式を使ってください。
 
-省略記法はパターンでも使える:
+パターンでも省略記法が使えますよ:
 
 ```valen
 match color {
@@ -57,11 +57,11 @@ if let .Some(x) = opt {
 }
 ```
 
-パターンでの省略記法の詳細は[パターンマッチング](/ja/guide/pattern-matching)を参照。
+パターンでの省略記法について詳しくは[パターンマッチング](/ja/guide/pattern-matching)を参照してください。
 
 ## `derives` — メソッドの自動生成
 
-enum は `derives(...)` 句を使ってペイロードバリアントのメソッドを自動生成できる。enum 名の後、本体 `{` の前に配置する:
+enum は `derives(...)` 句を使ってペイロードバリアントのメソッドを自動生成できます。enum 名の後、本体 `{` の前に配置:
 
 ```valen
 enum Shape derives(Eq, Hash, Display, Clone) {
@@ -78,11 +78,11 @@ enum Shape derives(Eq, Hash, Display, Clone) {
 | `Display` | `toString() -> String` | ペイロードバリアントのみ |
 | `Clone`   | `copy(...) -> Self` | ペイロードバリアントのみ |
 
-ペイロードなしのバリアント（`Point` のような）はシングルトンなので、同一性比較で十分 — derives は影響しない。
+ペイロードなしのバリアント（`Point` みたいなやつ）はシングルトンなので、同一性比較で十分。derives の影響は受けません。
 
 ## メソッドの追加
 
-enum には固有 `impl` ブロックでメソッドを追加できる。enum に直接振る舞いを付与する方法:
+enum には固有 `impl` ブロックでメソッドを追加できます。enum に直接振る舞いを付ける方法ですね:
 
 ```valen
 enum Shape {
@@ -112,9 +112,9 @@ let s = Shape::Circle(r = 3.0);
 println(s.describe());  // "circle with radius 3.0"
 ```
 
-`impl EnumName { ... }` で定義されたメソッドはすべてのバリアントで利用可能。内部的にはsealed interfaceに出力されるため、すべてのバリアントクラスがそれを継承する。
+`impl EnumName { ... }` で定義したメソッドはすべてのバリアントで使えます。内部的には sealed interface に出力されるので、すべてのバリアントクラスがそれを継承する仕組みです。
 
-enum に trait を実装することもできる:
+trait の実装もできますよ:
 
 ```valen
 trait Area {
@@ -135,7 +135,7 @@ let s = Shape::Circle(r = 3.0);
 println(f"{s.area()}");  // 28.27431
 ```
 
-これによりデータと振る舞いがきれいに分離される。enum はデータの*見た目*を定義し、`impl` ブロックはデータで*何ができるか*を定義する。
+こうするとデータと振る舞いがきれいに分離されます。enum はデータの*見た目*を定義して、`impl` ブロックはデータで*何ができるか*を定義する。
 
 ## より実践的な例
 
@@ -163,11 +163,11 @@ impl JsonValue {
 }
 ```
 
-再帰型は自然に動作する — `Array` は `List<JsonValue>` を含み、コンパイラはそれで全く問題ない。
+再帰型も自然に動きます — `Array` は `List<JsonValue>` を含みますが、コンパイラは全く問題なく処理してくれます。
 
 ## Enum vs Sealed Class
 
-enum と sealed class はどちらも型の閉じた集合を表す。違いは各バリアント/サブタイプに許される内容:
+enum と sealed class はどちらも型の閉じた集合を表します。違いは各バリアント/サブタイプに何が許されるか:
 
 | | Enum | Sealed Class |
 |---|---|---|
@@ -181,7 +181,7 @@ enum と sealed class はどちらも型の閉じた集合を表す。違いは�
 
 ### Enum を使うべき場合
 
-バリアントが純粋なデータで、振る舞いがすべてのバリアントで共有される場合は `enum` を使う:
+バリアントが純粋なデータで、振る舞いがすべてのバリアントで共有される場合は `enum` がぴったりです:
 
 ```valen
 enum Color {
@@ -194,7 +194,7 @@ enum Color {
 
 ### Sealed class を使うべき場合
 
-各サブタイプが独自のメソッドや状態を必要とする場合は `sealed class` を使う:
+各サブタイプが独自のメソッドや状態を必要とするなら `sealed class` にしましょう:
 
 ```valen
 sealed class Widget;
@@ -212,11 +212,11 @@ class TextField(pub placeholder: String, mut value: String) : Widget() {
 }
 ```
 
-**経験則:** まず `enum` から始める。バリアントに独自の状態やメソッドが欲しくなったら `sealed class` に切り替える。
+**経験則:** まず `enum` から始めてみてください。バリアントに独自の状態やメソッドが欲しくなったら `sealed class` に切り替えればOKです。
 
-## JVM上での表現
+## JVM 上での表現
 
-内部的に、Valenの enum はJavaのsealed interfaceとrecordにコンパイルされる:
+内部的に、Valen の enum は Java の sealed interface と record にコンパイルされます:
 
 ```java
 // Shape enum は以下になる:
@@ -234,9 +234,9 @@ public final class Shape$Point implements Shape {
 }
 ```
 
-JavaコードはValenの enum を `$` 区切りの名前（例: `Shape$Circle`）で扱える。ペイロードバリアントは名前付きコンポーネントを持つrecordになり、ペイロードなしバリアントはメモリ効率のためシングルトンになる。
+Java コードは Valen の enum を `$` 区切りの名前（例: `Shape$Circle`）で扱えます。ペイロードバリアントは名前付きコンポーネントを持つ record に、ペイロードなしバリアントはメモリ効率のためシングルトンになります。
 
-固有 `impl` と trait `impl` のメソッドはsealed interface側に出力されるため、すべてのバリアントで利用可能。
+固有 `impl` と trait `impl` のメソッドは sealed interface 側に出力されるので、すべてのバリアントで利用可能です。
 
 ## 次のステップ
 

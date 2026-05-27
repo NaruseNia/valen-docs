@@ -1,6 +1,6 @@
 # エラーモデル
 
-Valen は失敗処理を4つの異なるメカニズムに分離する。それぞれ正確に1つの役割を持ち、重複や曖昧さはない。
+Valen は失敗処理を4つのメカニズムに分離しています。それぞれが1つの役割だけを持ち、重複や曖昧さはありません。
 
 ## 4つのメカニズム
 
@@ -8,17 +8,17 @@ Valen は失敗処理を4つの異なるメカニズムに分離する。それ�
 |---|---|---|
 | `Option<T>` | 値の不在 | 「見つからない」が正常な結果の場合 |
 | `Result<T, E>` | 回復可能な失敗 | 呼び出し側が処理可能かつ処理すべき場合 |
-| `panic` | 契約違反 / 到達不能 | バグを検出 — プログラムを停止する |
+| `panic` | 契約違反 / 到達不能 | バグを検出してプログラムを停止する |
 | 例外 | Java FFI 境界のみ | Java が例外をスロー、境界でキャッチ |
 
-Valen に `throw` は存在しない。ドメイン上の失敗には `Option` / `Result` を使用。致命的エラーには `panic` を使用。Java の例外は `safe { }` でラップする。
+Valen に `throw` は存在しません。ドメイン上の失敗には `Option` / `Result` を使い、致命的エラーには `panic` を使います。Java の例外は `safe { }` でラップしてください。
 
 ## Option\<T\>
 
-`Option<T>` は値が存在するかもしれないし、しないかもしれないことを表す。2つのバリアント: `Some(value)` と `None`。
+`Option<T>` は値が存在するかもしれないし、しないかもしれないことを表します。バリアントは `Some(value)` と `None` の2つです。
 
 ::: info
-`T?` は `Option<T>` のシュガー**ではない**。`T?` は独立した nullable JVM 型（`Ty::Nullable`）。詳細は [Java 連携](/ja/reference/java-interop)を参照。
+`T?` は `Option<T>` のシュガー**ではありません**。`T?` は独立した nullable JVM 型（`Ty::Nullable`）です。詳しくは [Java 連携](/ja/reference/java-interop)を参照してください。
 :::
 
 ### メソッド
@@ -34,10 +34,10 @@ Valen に `throw` は存在しない。ドメイン上の失敗には `Option` /
 
 ## Result\<T, E\>
 
-`Result<T, E>` は成功（`Ok(value)`）または失敗（`Err(error)`）し得る計算を表す。
+`Result<T, E>` は成功（`Ok(value)`）または失敗（`Err(error)`）し得る計算を表します。
 
 ::: info
-`E` には `E: Error` trait 制約が**ない**。stdlib は `E` に境界なしで `Result<T, E>` を定義しており、型チェッカーも強制しない。任意の型を `E` として使用可能。将来のバージョンで `E: Error` 要件を導入する可能性があるが、現時点では無制約。
+`E` には `E: Error` trait 制約が**ありません**。stdlib は `E` に境界なしで `Result<T, E>` を定義しており、型チェッカーも強制しません。任意の型を `E` として使えます。将来のバージョンで `E: Error` 要件を導入する可能性がありますが、現時点では無制約です。
 :::
 
 ### メソッド
@@ -53,7 +53,7 @@ Valen に `throw` は存在しない。ドメイン上の失敗には `Option` /
 
 ## Error Trait
 
-`valen.core` で定義。ユーザー定義のエラー型が実装可能だが、`Result` には必須ではない。
+`valen.core` で定義されています。ユーザー定義のエラー型が実装できますが、`Result` には必須ではありません。
 
 ```valen
 trait Error {
@@ -61,7 +61,7 @@ trait Error {
 }
 ```
 
-ユーザー定義のエラー型:
+ユーザー定義のエラー型の例です。
 
 ```valen
 enum AppError {
@@ -86,11 +86,11 @@ impl Error for AppError {
 | `Result<T, E>` | `Ok(v)` → `v`、`Err(e)` → 早期リターン `Err(e)` | 外側の関数が `Result<..>` を返す |
 | `Option<T>` | `Some(v)` → `v`、`None` → 早期リターン `None` | 外側の関数が `Option<..>` を返す |
 
-- `Option` → `Result` の暗黙的昇格は禁止。
-- `?` は `T?`（nullable 型）には使用不可。`Option<T>` と `Result<T, E>` でのみ動作する。
+- `Option` → `Result` の暗黙的昇格は禁止
+- `?` は `T?`（nullable 型）には使えません。`Option<T>` と `Result<T, E>` でのみ動作します。
 
 ::: warning
-**エラー型の同一性は検証されない。** 型チェッカーは対象が `Result<T, E>` または `Option<T>` であること、外側の関数が同じラッパー型を返すことは確認するが、`E` の型が一致するかは**チェックしない**。異なるエラー型間での `?` の使用はエラーなしでコンパイルされる。正確性を保つために `map_err` で明示的に変換すること。
+**エラー型の同一性は検証されません。** 型チェッカーは対象が `Result<T, E>` または `Option<T>` であること、外側の関数が同じラッパー型を返すことは確認しますが、`E` の型が一致するかは**チェックしません**。異なるエラー型間での `?` の使用はエラーなしでコンパイルされます。正確性を保つために `map_err` で明示的に変換してください。
 :::
 
 ```valen
@@ -115,7 +115,7 @@ fn first_char(s: String) -> Option<Char> {
 
 ## `safe { }` ブロック
 
-Java メソッド呼び出しをラップし、例外をキャッチして null を正規化する。
+Java メソッド呼び出しをラップし、例外をキャッチして null を正規化します。
 
 **戻り型:** `Result<T, JavaException>`（void でない Java の戻り値は `Ok` 内で `T?`）
 
@@ -131,7 +131,7 @@ fn read_safe(path: String) -> Result<String, JavaException> {
 
 ### `safe expr` (省略記法)
 
-`safe { expr }` と等価。単一式ならブレース不要。
+`safe { expr }` と等価です。単一式ならブレース不要です。
 
 ```valen
 let r = safe file.readString();  // Result<String?, JavaException>
@@ -139,7 +139,7 @@ let r = safe file.readString();  // Result<String?, JavaException>
 
 ### `safe? expr`
 
-`safe { expr }?` と等価。`Result` を `?` でアンラップし、直接 `T?` を返す。
+`safe { expr }?` と等価です。`Result` を `?` でアンラップし、直接 `T?` を返します。
 
 ```valen
 let s: String? = safe? file.readString();
@@ -155,10 +155,10 @@ let s: String? = safe? file.readString();
 | `unsafe { expr }` / `unsafe expr` | `T` (non-nullable) | パススルー（クラッシュ） | NPE リスク |
 
 ::: warning 将来
-素の Java メソッド呼び出し（`safe` も `unsafe` もなし）はコンパイルエラーにする予定だが、**この制限は現在強制されていない**。素の呼び出しは正常にコンパイルされる。将来のバージョンで拒否予定。
+素の Java メソッド呼び出し（`safe` も `unsafe` もなし）はコンパイルエラーにする予定ですが、**この制限はまだ強制されていません**。素の呼び出しは正常にコンパイルされます。将来のバージョンで拒否予定です。
 :::
 
-**例外:** Java コンストラクタ呼び出しには `safe`/`unsafe` ラッパーが不要。コンストラクタは常に非 null を返し、スローした場合はオブジェクトが生成されない。
+**例外:** Java コンストラクタ呼び出しには `safe`/`unsafe` ラッパーが不要です。コンストラクタは常に非 null を返し、スローした場合はオブジェクトが生成されません。
 
 ```valen
 let list = ArrayList();  // safe/unsafe 不要
@@ -166,7 +166,7 @@ let list = ArrayList();  // safe/unsafe 不要
 
 ## `unsafe` ブロック / `unsafe fn`
 
-Valen の型および失敗モデルの安全性保証をバイパスする。
+Valen の型および失敗モデルの安全性保証をバイパスします。
 
 ### `unsafe` 内で許可される操作
 
@@ -178,7 +178,7 @@ Valen の型および失敗モデルの安全性保証をバイパスする。
 
 ### `unsafe` 省略記法
 
-ブレースなしの単一式形式:
+ブレースなしの単一式形式です。
 
 ```valen
 let pos: Position = unsafe obj as Position;
@@ -187,7 +187,7 @@ let pos: Position = unsafe obj as Position;
 
 ### `unsafe fn`
 
-関数本体全体が暗黙的な unsafe コンテキスト。呼び出し側は `unsafe { }` でラップする必要がある。
+関数本体全体が暗黙的な unsafe コンテキストになります。呼び出し側は `unsafe { }` でラップする必要があります。
 
 ```valen
 unsafe fn rawAccess(ptr: Long) -> Int { ... }
@@ -197,7 +197,7 @@ let v = unsafe { rawAccess(ptr) };
 
 ## `as` キャスト
 
-`expr as Type` は型キャストを実行する。安全性は変換の種類による:
+`expr as Type` は型キャストを実行します。安全性は変換の種類によります。
 
 - **安全（`unsafe` 不要）:** 数値の拡張変換（`42 as Long`、`'A' as Int`）
 - **unsafe 必要:** ダウンキャスト（`obj as Position` — `ClassCastException` リスク）
@@ -209,10 +209,10 @@ let pos: Position = unsafe { obj as Position }; // unsafe ダウンキャスト
 
 ## panic
 
-`panic` は契約違反や到達不能状態でプログラムを停止する。回復可能なエラー用ではない。
+`panic` は契約違反や到達不能状態でプログラムを停止します。回復可能なエラー用ではありません。
 
 ```valen
 panic("invariant violated: negative count");
 ```
 
-予期される失敗には `Option` / `Result` を使用。`panic` はバグのために予約。
+予期される失敗には `Option` / `Result` を使ってください。`panic` はバグのために予約されています。

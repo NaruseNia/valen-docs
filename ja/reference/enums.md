@@ -1,6 +1,6 @@
 # Enum (ADT)
 
-Valen の enum は **Rust スタイルの代数的データ型**（直和型）で、クラス階層とは完全に分離されている。閉じた型であり、enum に対する `match` は網羅的。
+Valen の enum は **Rust スタイルの代数的データ型**（直和型）です。クラス階層とは完全に分離されています。閉じた型であり、enum に対する `match` は網羅的です。
 
 ## 宣言
 
@@ -19,11 +19,11 @@ enum Shape {
 | `Variant`                   | ベア（ペイロードなし）| `Point`                    |
 | `Variant(field: Type, ...)` | 名前付きフィールド    | `Circle(r: Float)`        |
 
-位置指定（無名）フィールドはサポートされていない — ペイロードフィールドはすべて名前付き。
+位置指定（無名）フィールドはサポートされていません。ペイロードフィールドはすべて名前付きです。
 
 ## 構築
 
-`::` を使った完全パス構文:
+`::` を使った完全パス構文です。
 
 ```valen
 let s = Shape::Circle(r = 5.0);
@@ -32,7 +32,7 @@ let p = Shape::Point;
 
 ## 省略記法による構築: `.Variant`
 
-期待される型が既知の場合、enum 名を省略できる:
+期待される型が既知の場合、enum 名を省略できます。
 
 ```valen
 let c: Color = .Red;
@@ -45,13 +45,13 @@ fn make() -> Color {
 
 ### 推論規則
 
-1. 期待される型が名前付き enum 型の場合、その enum からバリアントを検索する。
-2. 期待される型がない場合、スコープ内のすべての enum からバリアント名で検索する（曖昧さはエラー）。
-3. 推論に失敗した場合、完全修飾の `EnumName::Variant` 形式を使用する。
+1. 期待される型が名前付き enum 型の場合、その enum からバリアントを検索
+2. 期待される型がない場合、スコープ内のすべての enum からバリアント名で検索（曖昧さはエラー）
+3. 推論に失敗した場合、完全修飾の `EnumName::Variant` 形式を使用
 
 ## パターンでの省略記法
 
-`.Variant` は `match`、`if let`、`while let`、`let else` でも使用可能:
+`.Variant` は `match`、`if let`、`while let`、`let else` でも使えます。
 
 ```valen
 match color {
@@ -67,7 +67,7 @@ if let .Some(x) = opt {
 
 ## `derives(...)` 句
 
-enum は `derives(...)` を宣言してペイロードバリアントのメソッドを自動生成できる。
+enum は `derives(...)` を宣言してペイロードバリアントのメソッドを自動生成できます。
 
 ```valen
 enum Shape derives(Eq, Hash, Display, Clone) {
@@ -77,7 +77,7 @@ enum Shape derives(Eq, Hash, Display, Clone) {
 }
 ```
 
-**構文:** `derives(Trait1, Trait2, ...)` — enum 名（およびジェネリックパラメータ）の後、本体 `{` の前に配置。
+**構文:** `derives(Trait1, Trait2, ...)` — enum 名（およびジェネリックパラメータ）の後、本体 `{` の前に配置します。
 
 ### 導出可能な Trait
 
@@ -88,13 +88,13 @@ enum Shape derives(Eq, Hash, Display, Clone) {
 | `Display` | `toString() -> String`         | ペイロードバリアントのみ |
 | `Clone`  | `copy(...) -> Self`             | ペイロードバリアントのみ |
 
-ベアバリアント（ペイロードなし）はシングルトンであり、同一性の等値で十分なため、derives は適用されない。
+ベアバリアント（ペイロードなし）はシングルトンなので、同一性の等値で十分です。derives は適用されません。
 
-生成ロジックは `data class` と共有（同一の `data_class_methods` モジュール）。
+生成ロジックは `data class` と共有しています（同一の `data_class_methods` モジュール）。
 
 ## `impl` による固有メソッド
 
-enum は固有 `impl` ブロックでメソッドを持てる:
+enum は固有 `impl` ブロックでメソッドを持てます。
 
 ```valen
 enum Shape {
@@ -121,9 +121,9 @@ impl Shape {
 }
 ```
 
-- `impl EnumName { ... }` — 固有メソッド、すべてのバリアントで利用可能。
-- `impl Trait for EnumName { ... }` — trait 実装。
-- メソッドは sealed interface に出力されるため、すべてのバリアントで使用可能。
+- `impl EnumName { ... }` — 固有メソッド、すべてのバリアントで利用可能
+- `impl Trait for EnumName { ... }` — trait 実装
+- メソッドは sealed interface に出力されるため、すべてのバリアントで使用可能
 
 ## `enum` と `sealed class` の比較
 
@@ -135,7 +135,7 @@ impl Shape {
 | 継承                | なし（フラット）                   | 親子階層                               |
 | バリアントごとの可視性 | 不可能                          | 各サブタイプが独立して決定             |
 
-**目安:** まず `enum` を使う。バリアントが独自のメソッドや状態を必要とする場合に `sealed class` にアップグレード。
+**目安:** まず `enum` を使ってみてください。バリアントが独自のメソッドや状態を必要とする場合に `sealed class` にアップグレードしましょう。
 
 ## JVM バイトコード表現
 
@@ -163,12 +163,12 @@ public final class Shape$Point implements Shape {
 ```
 
 要点:
-- enum 自体は `PermittedSubclasses` 属性を持つ `sealed interface` になる。
-- ペイロードバリアントは `private final` フィールドとパブリックゲッターを持つ `record` クラスになる。
-- ベアバリアントは static `INSTANCE` フィールドを持つシングルトンクラスになる。
-- バリアントクラスは `static` ネストクラスではなく、**独立したトップレベル `.class` ファイル**。バイナリ名の `$` は Java の命名規則に従うが、クラス構造は独立。
-- Valen の `Float` は JVM `float` (32-bit) にマッピング。Valen の `Double` は JVM `double` (64-bit) にマッピング。
-- `derives(...)` はペイロードバリアントの record に `equals` / `hashCode` / `toString` / `copy` を生成する。
-- 固有 impl と trait impl のメソッドは sealed interface に出力される。
+- enum 自体は `PermittedSubclasses` 属性を持つ `sealed interface` になります。
+- ペイロードバリアントは `private final` フィールドとパブリックゲッターを持つ `record` クラスになります。
+- ベアバリアントは static `INSTANCE` フィールドを持つシングルトンクラスになります。
+- バリアントクラスは `static` ネストクラスではなく、**独立したトップレベル `.class` ファイル**です。バイナリ名の `$` は Java の命名規則に従いますが、クラス構造は独立しています。
+- Valen の `Float` は JVM `float` (32-bit) に、Valen の `Double` は JVM `double` (64-bit) にマッピングされます。
+- `derives(...)` はペイロードバリアントの record に `equals` / `hashCode` / `toString` / `copy` を生成します。
+- 固有 impl と trait impl のメソッドは sealed interface に出力されます。
 
-バリアントのバイナリ名: `EnumName$VariantName` (Java の内部クラス命名規則)。
+バリアントのバイナリ名: `EnumName$VariantName` (Java の内部クラス命名規則)

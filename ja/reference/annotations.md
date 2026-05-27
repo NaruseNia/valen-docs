@@ -2,7 +2,7 @@
 
 ## アノテーションの宣言
 
-`annotation class` でカスタムアノテーションを定義する。
+`annotation class` でカスタムアノテーションを定義します。
 
 ```valen
 annotation class Deprecated(pub message: String)
@@ -15,29 +15,29 @@ annotation class JsonName(pub name: String)
 
 ### パラメータ型
 
-アノテーションのパラメータは**リテラルのみ**を受け付ける:
+アノテーションのパラメータは**リテラルのみ**を受け付けます。
 
 `String`, `Int`, `Float`, `Bool`, `Long`, `Double`, `Char`
 
 ### @Target
 
-`@Target("type")`、`@Target("type", "field", "method")` 等でアノテーションの適用先を制限する。ターゲットは HIR に格納される。
+`@Target("type")`、`@Target("type", "field", "method")` 等でアノテーションの適用先を制限します。ターゲットは HIR に格納されます。
 
 ::: warning
-**`@Target` のバリデーションは未実装。** ターゲット文字列はパースされ格納されるが、コンパイラはアノテーションが有効なターゲットに適用されているか**チェックしない**。例えば、フィールド専用アノテーションをクラスに適用してもエラーなしでコンパイルされる。
+**`@Target` のバリデーションは未実装です。** ターゲット文字列はパースされ格納されますが、コンパイラはアノテーションが有効なターゲットに適用されているか**チェックしません**。たとえば、フィールド専用アノテーションをクラスに適用してもエラーなしでコンパイルされます。
 :::
 
 ### @Retention
 
-デフォルトのリテンションは `RUNTIME`。
+デフォルトのリテンションは `RUNTIME` です。
 
 ::: warning
-**`@Retention` は未実装。** パース、格納、JVM バイトコードへのリフレクション出力すべてが未実装。
+**`@Retention` は未実装です。** パース、格納、JVM バイトコードへのリフレクション出力すべてが未実装です。
 :::
 
 ### JVM 表現
 
-`@interface`（`ACC_INTERFACE | ACC_ABSTRACT | ACC_ANNOTATION`）として出力される。
+`@interface`（`ACC_INTERFACE | ACC_ABSTRACT | ACC_ANNOTATION`）として出力されます。
 
 ## アノテーションの適用
 
@@ -61,19 +61,19 @@ data class User(pub name: String);
 
 ### 適用可能なターゲット
 
-トップレベル宣言（`class`、`data class`、`enum`、`trait`、`fn`）およびフィールド / コンストラクタパラメータ。
+トップレベル宣言（`class`、`data class`、`enum`、`trait`、`fn`）およびフィールド / コンストラクタパラメータです。
 
 ### Java アノテーション
 
-インポートした Java アノテーションは `@Foo(...)` 構文で適用可能。構文は Valen 定義のアノテーションと同じ。
+インポートした Java アノテーションは `@Foo(...)` 構文で適用できます。構文は Valen 定義のアノテーションと同じです。
 
 ::: warning
-**Java アノテーションのパラメータ型チェックは未実装。** コンパイラはクラスパスから Java アノテーション定義を解決しないため、パラメータ型は検証されない。適用は信頼ベース。
+**Java アノテーションのパラメータ型チェックは未実装です。** コンパイラはクラスパスから Java アノテーション定義を解決しないため、パラメータ型は検証されません。適用は信頼ベースです。
 :::
 
 ## `@valen.Closed`
 
-唯一の組み込みアノテーション。Java の sealed 階層に対する網羅的 `match` を有効にする。
+唯一の組み込みアノテーションです。Java の sealed 階層に対する網羅的 `match` を有効にします。
 
 ### ルール
 

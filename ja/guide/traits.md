@@ -1,10 +1,10 @@
 # Trait
 
-Trait は Valen のポリモーフィズムに対する答え — 6層の abstract クラス継承は伴わない。trait はコントラクト（メソッドの集合）を定義し、任意の型が `impl` でそのコントラクトを実装できる。シンプルで明示的、サプライズなし。
+Trait は Valen のポリモーフィズムに対する答えです — 6層の abstract クラス継承とは無縁。trait はコントラクト（メソッドの集合）を定義して、任意の型が `impl` でそのコントラクトを実装します。シンプルで明示的、サプライズなし。
 
 ## Trait の定義
 
-trait は実装者が提供すべきメソッドシグネチャを宣言する:
+trait は実装者が提供すべきメソッドシグネチャを宣言します:
 
 ```valen
 trait Area {
@@ -16,11 +16,11 @@ trait Display {
 }
 ```
 
-ここにはメソッド本体はない — これから来るものの形だけ。（シャレ込み。）
+メソッド本体はなし — これから来るものの形だけです。（シャレです。）
 
 ### デフォルトメソッド
 
-trait はデフォルト実装を提供することもできる。実装者はオーバーライドするかデフォルトのままにするか選べる:
+trait はデフォルト実装も提供できます。実装者はオーバーライドしても、デフォルトのままでもOK:
 
 ```valen
 trait Greet {
@@ -36,7 +36,7 @@ let d = Dog();
 println(d.greet());  // "hello"
 ```
 
-デフォルトをオーバーライドしたい場合は、`impl` ブロックで独自の実装を提供する:
+デフォルトをオーバーライドしたければ、`impl` ブロックで独自の実装を書くだけ:
 
 ```valen
 impl Greet for Cat {
@@ -46,7 +46,7 @@ impl Greet for Cat {
 
 ## Trait の実装
 
-`impl Trait for Type` を使って、型に trait のコントラクトを実現させる:
+`impl Trait for Type` で、型に trait のコントラクトを実現させます:
 
 ```valen
 enum Shape {
@@ -66,15 +66,15 @@ impl Area for Shape {
 }
 ```
 
-これで `Area` を期待するものは `Shape` で動作する。基底クラスなし、`extends` なし、存在論的不安なし。
+これで `Area` を期待するものなら `Shape` で動きます。基底クラスなし、`extends` なし、存在論的不安もなし。
 
 ::: info trait/impl のメソッドはすべて public
-コンパイラは `trait` 定義と `impl` ブロック内のすべてのメソッドを、書いた可視性修飾子に関係なく `pub` として強制する。これは設計上の意図 — trait コントラクトはパブリックインターフェース。
+コンパイラは `trait` 定義と `impl` ブロック内のすべてのメソッドを、書いた可視性修飾子に関係なく `pub` として強制します。これは設計上の意図で、trait コントラクトはパブリックインターフェースです。
 :::
 
 ## 固有 Impl — Trait なしのメソッド
 
-trait 全体を定義せずに型にメソッドを追加したいだけの場合がある。それが**固有 impl** の役目:
+trait 全体を定義せずに型にメソッドを追加したいだけのこともありますよね。それが**固有 impl** の出番:
 
 ```valen
 data class Vec2(pub x: Float, pub y: Float);
@@ -91,19 +91,19 @@ impl Vec2 {
 }
 ```
 
-これは `enum` と `data class` 型にメソッドを追加する主要な方法。メソッドを持つクラス本体がないため。
+これが `enum` と `data class` にメソッドを追加する主な方法です。メソッドを持つクラス本体がないので。
 
-`class` 型の場合、クラス本体に直接メソッドを置くか固有 impl を使うか選べる:
+`class` の場合は、クラス本体に直接書いても固有 impl を使ってもどちらでも:
 
 ```valen
 class User(pub name: String, mut age: Int) {
-    // クラス本体のメソッド — 問題なく動作
+    // クラス本体のメソッド — 問題なく動く
     fn greet(self) -> String {
         f"Hello, {self.name}!"
     }
 }
 
-// 固有 impl — これも問題なく動作
+// 固有 impl — これも問題なし
 impl User {
     fn birthday(mut self) {
         self.age = self.age + 1;
@@ -113,14 +113,14 @@ impl User {
 
 ## レシーバ: `self` と `mut self`
 
-trait メソッドは最初のパラメータとしてレシーバを取る:
+trait メソッドは最初のパラメータとしてレシーバを取ります:
 
 | レシーバ | 意味 |
 |---|---|
 | `self` | イミュータブルなインスタンス |
 | `mut self` | ミュータブルなインスタンス |
 
-以上。`&self` も `&mut self` もない — Valen には所有権や借用がない。考えることが1つ減る。
+以上です。`&self` も `&mut self` もありません — Valen には所有権も借用もないんです。考えることが1つ減りますね。
 
 ```valen
 trait Counter {
@@ -136,12 +136,12 @@ impl Counter for ClickTracker {
 
 ## Orphan ルール
 
-`impl Trait for Type` は以下の場合のみ書ける:
+`impl Trait for Type` を書けるのは以下の場合だけです:
 
 - **trait を所有している**（自分のコンパイル単位で定義されている）、**または**
 - **型を所有している**（最外の型コンストラクタが自分のコンパイル単位で定義されている）
 
-つまりアプリケーションコードから `java.lang.String` に `Display` を付けることはできない。このルールがエコシステムの健全性を保つ — 競合する実装が飛び交うことがなくなる。
+つまりアプリケーションコードから `java.lang.String` に `Display` を付けることはできません。このルールがエコシステムの健全性を保ってくれます — 競合する実装が飛び交うことがなくなるんです。
 
 ```valen
 // OK — 自分の型、外部の trait
@@ -165,7 +165,7 @@ impl MyTrait for String {
 
 ### Trait 充足ルール
 
-クラス本体のメソッドが trait メソッドと同じ名前・シグネチャを持っていても、それはその trait の実装には**ならない**。trait の実装は `impl Trait for Type { ... }` の中で行う*必要がある*。両者は完全に独立:
+ここは実はちょっとハマりポイントなんですが、クラス本体のメソッドが trait メソッドと同じ名前・シグネチャを持っていても、それはその trait の実装には**なりません**。trait の実装は `impl Trait for Type { ... }` の中でやる*必要があります*。両者は完全に独立:
 
 ```valen
 trait Show {
@@ -185,7 +185,7 @@ impl Show for User {
 
 ## UFCS — 2つの Trait が同名メソッドで衝突した場合
 
-2つの trait が同名のメソッドを定義し、ある型が両方を実装している場合、`obj.hello()` は曖昧になる。コンパイラは当然エラーを出す。**Universal Function Call Syntax** で解決:
+2つの trait が同名のメソッドを定義していて、ある型が両方を実装している場合、`obj.hello()` は曖昧になります。コンパイラは当然エラーを出しますよね。**Universal Function Call Syntax** で解決しましょう:
 
 ```valen
 trait Japanese {
@@ -211,24 +211,24 @@ let jp = Japanese::hello(g);  // "konnichiwa"
 let en = English::hello(g);   // "Hello"
 ```
 
-構文は `Trait::method(receiver, args...)`。レシーバが最初の引数になる。
+構文は `Trait::method(receiver, args...)` です。レシーバが最初の引数になります。
 
 ### メソッド解決順序
 
-`value.foo()` を呼ぶ時、コンパイラは以下の順序で解決する:
+`value.foo()` を呼ぶとき、コンパイラは以下の順序で解決します:
 
 1. **クラス本体のメソッド** — 最高優先度
-2. **固有 impl メソッド** — クラス本体にマッチがない場合にチェック
-3. **Trait メソッド** — 固有 impl にマッチがない場合にチェック
+2. **固有 impl メソッド** — クラス本体にマッチがない場合
+3. **Trait メソッド** — 固有 impl にもない場合
 4. **曖昧？** — コンパイルエラー、UFCS を使う
 
 ::: tip クラス本体のメソッドは trait を満たさない
-クラス本体のメソッドが trait メソッドとまったく同じ名前・シグネチャを持っていても、その trait を実装したことには**ならない**。`impl Trait for Type { ... }` ブロックが依然として必要。両者は独立。
+クラス本体のメソッドが trait メソッドとまったく同じ名前・シグネチャを持っていても、その trait を実装したことには**なりません**。`impl Trait for Type { ... }` ブロックが必要です。両者は独立しています。
 :::
 
 ## Sealed Trait
 
-`sealed trait` は実装者を制限する。同一コンパイル単位内の型のみが許される — つまりコンパイラは実装者の完全な集合を把握し、**網羅的マッチング**を強制できる。
+`sealed trait` は実装者を制限します。同一コンパイル単位内の型のみ許可 — つまりコンパイラは実装者の完全な集合を把握できて、**網羅的マッチング**を強制できるんです。
 
 ```valen
 sealed trait Expr {
@@ -249,7 +249,7 @@ impl Expr for Add {
 }
 ```
 
-これで `Expr` に対して `match` でき、コンパイラがすべてのケースを処理していることを保証する:
+これで `Expr` に対して `match` でき、コンパイラがすべてのケースを処理していることを保証してくれます:
 
 ```valen
 fn describe(e: Expr) -> String {
@@ -261,19 +261,19 @@ fn describe(e: Expr) -> String {
 }
 ```
 
-sealed trait は「enum に似ているが独立したクラス定義を持つ」もの。各実装者は独自のフィールド、メソッド、状態を持てる — enum バリアントより柔軟だが、閉じた世界であることは同じ。
+sealed trait は「enum に似ているけど独立したクラス定義を持つ」ものです。各実装者は独自のフィールド、メソッド、状態を持てます — enum バリアントより柔軟ですが、閉じた世界であることは同じ。
 
 **ルール:**
 - 実装者は `class` または `data class` でなければならない（`enum` 不可）
-- すべての実装者は同一コンパイル単位内に存在する必要がある
+- すべての実装者は同一コンパイル単位内に存在する必要あり
 
 ::: info スーパー trait は未実装
-`trait Queryable: Component + Eq { ... }` のようなスーパー trait 要件の宣言構文は現在サポートされていない。回避策として、使用箇所で必要なすべての境界を指定する: `<T: Queryable + Component + Eq>`。
+`trait Queryable: Component + Eq { ... }` のようなスーパー trait 要件の宣言構文は現在サポートされていません。回避策として、使用箇所で必要なすべての境界を指定してください: `<T: Queryable + Component + Eq>`。
 :::
 
 ## 関連型
 
-trait が各実装者で異なる「型スロット」を必要とする場合がある。それが関連型:
+trait が各実装者で異なる「型スロット」を必要とする場合があります。それが関連型:
 
 ```valen
 trait Container {
@@ -289,15 +289,15 @@ impl Container for IntList {
 }
 ```
 
-デフォルトを提供することもできる: trait 定義での `type Item = Int;`。実装者はオーバーライドするかデフォルトのままにできる。
+デフォルトを提供することもできます。trait 定義で `type Item = Int;` と書けば、実装者はオーバーライドするかデフォルトのままにできます。
 
 ::: warning Self::AssocType は未実装
-trait メソッドシグネチャで関連型を参照する `Self::Item` や `Self::Output` 構文はパーサで現在サポートされていない。回避策として、標準ライブラリの演算子 trait は `Self::Output` の代わりに `Self` を戻り値型として使用している。つまり演算子の実装は常にレシーバと同じ型を返す。
+trait メソッドシグネチャで関連型を参照する `Self::Item` や `Self::Output` 構文は、パーサで現在サポートされていません。回避策として、標準ライブラリの演算子 trait は `Self::Output` の代わりに `Self` を戻り値型に使っています。つまり演算子の実装は常にレシーバと同じ型を返します。
 :::
 
 ## 演算子オーバーロード
 
-Valenの演算子は trait メソッドの変装。`+` を自分の型で使いたい？ `Add` を実装する。
+Valen の演算子は実は trait メソッドの変装です。`+` を自分の型で使いたければ、`Add` を実装するだけ。
 
 ```valen
 data class Vec2(pub x: Float, pub y: Float);
@@ -324,7 +324,7 @@ let c = a + b;  // Vec2(x = 4.0, y = 6.0)
 | `/` | `Div<Rhs>` | `fn div(self, rhs: Rhs) -> Self` |
 | `%` | `Rem<Rhs>` | `fn rem(self, rhs: Rhs) -> Self` |
 
-各 trait は関連型 `type Output` を宣言するが、`Self::Output` が未実装のため、実際の戻り値型は `Self`。
+各 trait は関連型 `type Output` を宣言しますが、`Self::Output` が未実装のため、実際の戻り値型は `Self` になります。
 
 ### 単項演算子
 
@@ -335,7 +335,7 @@ let c = a + b;  // Vec2(x = 4.0, y = 6.0)
 
 ### 比較: `Ord` と `Eq`
 
-順序比較（`<`、`<=`、`>`、`>=`）には `Ord` を実装する:
+順序比較（`<`、`<=`、`>`、`>=`）には `Ord` を実装します:
 
 ```valen
 impl Ord for Priority {
@@ -344,12 +344,12 @@ impl Ord for Priority {
     }
 }
 
-// これで taskA < taskB が動作する
+// これで taskA < taskB が動く
 ```
 
-`cmp` は `<` で負の数、`==` でゼロ、`>` で正の数を返す。
+`cmp` は `<` で負の数、`==` でゼロ、`>` で正の数を返します。
 
-等価性（`==`、`!=`）には、オプションで `Eq` を実装できる:
+等価性（`==`、`!=`）には、オプションで `Eq` を実装できます:
 
 ```valen
 impl Eq for CaseInsensitiveString {
@@ -359,11 +359,11 @@ impl Eq for CaseInsensitiveString {
 }
 ```
 
-型が `impl Eq` を持てば、`==` は `Eq::eq` を使う。なければ `.equals()` にフォールバック。プリミティブ（`Int`、`Float` など）は組み込み比較を使う — trait 不要。
+型が `impl Eq` を持っていれば、`==` は `Eq::eq` を使います。なければ `.equals()` にフォールバック。プリミティブ（`Int`、`Float` など）は組み込み比較なので trait 不要です。
 
 ## derives — Trait の自動実装
 
-`equals`、`hashCode`、`toString` を手書きするのは通過儀礼。幸い、キャリアで一度やれば十分。その後は `derives` を使う:
+`equals`、`hashCode`、`toString` を手書きするのは通過儀礼みたいなものですよね。でもキャリアで一度やれば十分。その後は `derives` に任せましょう:
 
 ```valen
 pub data class Entity(pub id: Int) derives(Eq, Hash);
@@ -386,9 +386,9 @@ pub class Point(pub x: Float, pub y: Float) derives(Eq) {}
 | `Display` | `toString` — `TypeName(field=value, ...)` 形式 |
 | `Clone` | `copy` — 全フィールドのコピーコンストラクタ |
 
-### data class は無料で付いてくる
+### data class はタダで付いてくる
 
-ここが肝心: `data class` は何も書かなくても `Eq`、`Hash`、`Display`、`Clone` を自動的に derives する。それが `data class` の存在意義。
+ここが肝心なんですが、`data class` は何も書かなくても `Eq`、`Hash`、`Display`、`Clone` を自動的に derives します。それが `data class` の存在意義。
 
 ```valen
 // 4つの trait すべてが自動生成される。derives() 不要。
@@ -399,7 +399,7 @@ let b = Point(x = 1.0, y = 2.0);
 a == b  // true — 構造的等価性、儀式なし
 ```
 
-data class に `derives(Eq)` と書いても構わない。冗長だが無害。
+data class に `derives(Eq)` と書いても問題ありません。冗長ですが無害です。
 
 ## 次のステップ
 
