@@ -1,8 +1,41 @@
-# Unsafe
+# Unsafe & Safe
 
 Valen's type system and failure model work hard to keep you safe — null is `Option`, Java exceptions become `Result`, and downcasts require proof. But sometimes you know something the compiler doesn't, and you need to tell it "trust me on this one."
 
-That's what `unsafe` is for. It's an explicit opt-out of safety guarantees. Use it sparingly. When you do use it, keep it small.
+That's what `unsafe` is for. It's an explicit opt-out of safety guarantees. And `safe` is its counterpart — an explicit opt-in to wrapping Java's wild behavior into Valen's orderly type system.
+
+## `safe { }` Block
+
+The `safe` block catches Java exceptions and wraps them into `Result<T, JavaException>`. It's the standard way to call Java methods:
+
+```valen
+let result = safe { file.readString() };
+// result: Result<String?, JavaException>
+```
+
+If the Java method succeeds, you get `Ok(value)`. If it throws, you get `Err(JavaException)`. Java return values are automatically typed as `T?` (nullable) because Java methods can always return null.
+
+### Shorthand: `safe expr`
+
+For one-liners, drop the braces:
+
+```valen
+let r = safe file.readString();  // Result<String?, JavaException>
+```
+
+Exactly equivalent to `safe { file.readString() }`.
+
+### `safe?` — Combine With Early Return
+
+`safe? expr` is `safe { expr }?` in one shot — call the method, wrap exceptions, then `?`-unwrap:
+
+```valen
+fn read_content(path: String) -> Result<String?, JavaException> {
+    let text: String? = safe? Files.readString(Paths.get(path));
+    // If the Java method threw, we already returned Err
+    Ok(text)
+}
+```
 
 ## `unsafe { }` Block
 
@@ -55,8 +88,8 @@ let content: String = unsafe { file.readString() };  // String (or explosion)
 Inside `unsafe`, Java return values are treated as non-nullable. If the method actually returns null, you get an NPE:
 
 ```valen
-// safe version — null becomes Option
-let val: Option<String> = safe { map.get("key") }?;
+// safe version — null becomes T?
+let result = safe { map.get("key") };  // Result<String?, JavaException>
 
 // unsafe version — null becomes NPE
 let val: String = unsafe { map.get("key") };  // NPE if key is missing
@@ -74,13 +107,22 @@ unsafe fn rawAccess(ptr: Long) -> Int {
 }
 ```
 
-The catch: calling an `unsafe fn` requires an `unsafe` block at the call site:
+The catch: calling an `unsafe fn` **requires** an `unsafe` block at the call site:
 
 ```valen
 let v = unsafe { rawAccess(ptr) };
 ```
 
 This makes every `unsafe fn` call visible and auditable. Code reviewers can grep for `unsafe` and find every spot where guarantees are relaxed.
+
+## `safe` vs `unsafe` Side by Side
+
+| | `safe { expr }` | `unsafe { expr }` |
+|---|---|---|
+| **Return type** | `Result<T?, JavaException>` | `T` (non-nullable) |
+| **Exceptions** | Caught, wrapped in `Err` | Pass-through (crash) |
+| **Null handling** | `T?` (nullable) | `T` (NPE risk) |
+| **Use case** | Default for Java calls | When you've verified safety |
 
 ## When to Use `unsafe`
 
@@ -105,9 +147,11 @@ An `unsafe` block should be as narrow as possible — ideally one expression. If
 | Operation | Safe Way | Unsafe Way |
 |---|---|---|
 | Java method call | `safe { method() }` | `unsafe { method() }` |
-| Null handling | `T?` (Option) | `T` (NPE risk) |
+| Java method + `?` | `safe? method()` | — |
+| Null handling | `T?` (nullable) | `T` (NPE risk) |
 | Downcast | Not available outside `unsafe` | `unsafe { obj as Type }` |
 | Numeric widening | `42 as Long` (no `unsafe` needed) | — |
+| Call `unsafe fn` | — | `unsafe { dangerousFn() }` |
 
 ## What's Next?
 

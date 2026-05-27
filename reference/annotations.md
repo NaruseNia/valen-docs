@@ -19,14 +19,21 @@ Annotation parameters accept **literals only**:
 
 `String`, `Int`, `Float`, `Bool`, `Long`, `Double`, `Char`
 
-### Retention & Target
+### @Target
 
-| Attribute | Default |
-|---|---|
-| Retention | `RUNTIME` |
-| Target | `TYPE` + `FIELD` + `METHOD` |
+Use `@Target("type")`, `@Target("type", "field", "method")`, etc. to restrict where the annotation can be applied. The targets are stored in the HIR.
 
-Override target with `@Target("type")`, `@Target("type", "field", "method")`, etc.
+::: warning
+**`@Target` validation is not implemented.** The target strings are parsed and stored, but the compiler does **not** check whether an annotation is applied to a valid target. For example, applying a field-only annotation to a class compiles without error.
+:::
+
+### @Retention
+
+Default retention is `RUNTIME`.
+
+::: warning
+**`@Retention` is not implemented.** Parsing, storage, and JVM bytecode reflection of retention are all unimplemented.
+:::
 
 ### JVM Representation
 
@@ -58,10 +65,10 @@ Top-level declarations (`class`, `data class`, `enum`, `trait`, `fn`) and fields
 
 ### Java Annotations
 
-Imported Java annotations can be applied with `@Foo(...)`. Parameter validation is trust-based (no compile-time check against Java annotation metadata).
+Imported Java annotations can be applied with `@Foo(...)` syntax. The syntax is the same as for Valen-defined annotations.
 
 ::: warning
-Applying Java annotations **from** Valen code is currently not supported. Java annotations must be added in Java source files.
+**Java annotation parameter type checking is not implemented.** The compiler does not resolve Java annotation definitions from the classpath, so parameter types are not validated. Application is trust-based.
 :::
 
 ## `@valen.Closed`

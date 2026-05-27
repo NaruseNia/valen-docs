@@ -12,21 +12,37 @@ let greeting = "Hello, world!";
 
 ### Escape Sequences
 
-The usual suspects:
+Strings support the following escape sequences:
 
 | Escape | Meaning          |
 |--------|------------------|
 | `\\`   | Backslash        |
-| `\n`   | Newline          |
-| `\r`   | Carriage return  |
+| `\n`   | Newline (LF)     |
+| `\r`   | Carriage return (CR) |
 | `\t`   | Tab              |
 | `\"`   | Double quote     |
-| `\{`   | Literal `{` (in f-strings) |
-| `\}`   | Literal `}` (in f-strings) |
+| `\0`   | NUL character    |
 
 ```valen
 let path = "C:\\Users\\valen";
 let multiline = "line one\nline two";
+let quoted = "She said \"hi\"";
+let with_nul = "terminated\0here";
+```
+
+Any other backslash + character combination (like `\x`) currently passes through as-is (the backslash and the following character are both kept). This behavior may become stricter in the future.
+
+## Character Literals
+
+Single characters use single quotes and support the same escape sequences (with `\'` instead of `\"`):
+
+```valen
+let ch = 'A';
+let newline = '\n';
+let tab = '\t';
+let nul = '\0';
+let single_quote = '\'';
+let backslash = '\\';
 ```
 
 ## f-strings: String Interpolation
@@ -49,7 +65,20 @@ let user = get_user(1);
 let label = f"User: {user.name}, score: {user.score * 2}";
 ```
 
-### Limitations
+::: tip No space between f and the quote
+`f"..."` is a single token. If you write `f "..."`, the lexer sees an identifier `f` followed by a plain string — not an f-string.
+:::
+
+### Escaping Braces in f-strings
+
+Need a literal `{` or `}` in an f-string? Escape it with a backslash:
+
+```valen
+let json_ish = f"\{\"name\": \"{name}\"\}";
+// {"name": "Alice"}
+```
+
+### f-string Limitations
 
 f-strings keep things simple on purpose:
 
@@ -63,14 +92,20 @@ let result = compute_something();
 let msg = f"The answer is {result}";   // clean and clear
 ```
 
-### Escaping Braces
+### Complete f-string Escape Reference
 
-Need a literal `{` or `}` in an f-string? Escape it:
+f-strings support all the standard string escapes plus brace escaping:
 
-```valen
-let json_ish = f"\{\"name\": \"{name}\"\}";
-// {"name": "Alice"}
-```
+| Escape | Meaning               |
+|--------|-----------------------|
+| `\\`   | Backslash             |
+| `\n`   | Newline (LF)          |
+| `\r`   | Carriage return (CR)  |
+| `\t`   | Tab                   |
+| `\"`   | Double quote          |
+| `\0`   | NUL character         |
+| `\{`   | Literal `{`           |
+| `\}`   | Literal `}`           |
 
 ## Immutability
 

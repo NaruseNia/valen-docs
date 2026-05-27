@@ -43,31 +43,78 @@ fn origin() -> Shape {
 
 This shorthand works everywhere the expected type is known — variable declarations, function arguments, return expressions, and match arms. If the compiler can't figure it out, it'll ask you to use the full `Shape::Circle(...)` form.
 
-## Enums Are Not Classes
-
-This is worth emphasizing: **Valen enums are data, not objects.** An enum variant cannot have its own methods, its own state beyond the declared payload, or its own trait implementations. If you need per-variant behavior, you add it through trait implementations on the enum as a whole:
+The shorthand also works in patterns:
 
 ```valen
-trait Describe {
-    fn describe(self) -> String;
+match color {
+    .Red => "red",
+    .Green => "green",
+    .Blue(v) => f"blue({v})",
 }
 
-impl Describe for Shape {
-    fn describe(self) -> String {
-        match self {
-            .Circle(r) => f"A circle with radius {r}",
-            .Rect(w, h) => f"A {w}x{h} rectangle",
-            .Point => "A lonely point in space",
-        }
-    }
+if let .Some(x) = opt {
+    x
 }
 ```
 
-The `match` expression is your workhorse here. Every time you need to do something different per variant, you match on it. No virtual dispatch, no inheritance — just pattern matching.
+See [Pattern Matching](./pattern-matching) for more details on shorthand in patterns.
 
-## Adding Methods via Trait Impl
+## `derives` — Auto-Generated Methods
 
-Since enums can't have methods directly, trait `impl` is how you attach behavior:
+Enums can use the `derives(...)` clause to auto-generate methods for payload variants. Place it after the enum name, before the body `{`:
+
+```valen
+enum Shape derives(Eq, Hash, Display, Clone) {
+    Circle(r: Float),
+    Rect(w: Float, h: Float),
+    Point,
+}
+```
+
+| Derive    | What You Get | Applies To |
+|-----------|-------------|------------|
+| `Eq`      | `equals(Object) -> Boolean` | Payload variants only |
+| `Hash`    | `hashCode() -> Int` | Payload variants only |
+| `Display` | `toString() -> String` | Payload variants only |
+| `Clone`   | `copy(...) -> Self` | Payload variants only |
+
+No-payload variants (like `Point`) are singletons, so identity comparison is sufficient — derives don't affect them.
+
+## Adding Methods
+
+Enums can have methods via inherent `impl` blocks. This is how you attach behavior directly to an enum:
+
+```valen
+enum Shape {
+    Circle(r: Float),
+    Rect(w: Float, h: Float),
+    Point,
+}
+
+impl Shape {
+    fn describe(self) -> String {
+        match self {
+            .Circle(r) => f"circle with radius {r}",
+            .Rect(w, h) => f"rect {w}x{h}",
+            .Point => "point",
+        }
+    }
+
+    fn is_circle(self) -> Boolean {
+        match self {
+            .Circle(_) => true,
+            _ => false,
+        }
+    }
+}
+
+let s = Shape::Circle(r = 3.0);
+println(s.describe());  // "circle with radius 3.0"
+```
+
+Methods defined in `impl EnumName { ... }` are available on all variants. Under the hood, they're emitted on the sealed interface, so every variant class inherits them.
+
+You can also implement traits for enums:
 
 ```valen
 trait Area {
@@ -88,7 +135,7 @@ let s = Shape::Circle(r = 3.0);
 println(f"{s.area()}");  // 28.27431
 ```
 
-This keeps data and behavior cleanly separated. The enum defines *what* the data looks like; the trait impl defines *what you can do* with it.
+This keeps data and behavior cleanly separated. The enum defines *what* the data looks like; the `impl` blocks define *what you can do* with it.
 
 ## A Richer Example
 
@@ -102,11 +149,7 @@ enum JsonValue {
     Object(entries: Map<String, JsonValue>),
 }
 
-trait Display {
-    fn display(self) -> String;
-}
-
-impl Display for JsonValue {
+impl JsonValue {
     fn display(self) -> String {
         match self {
             .Null => "null",
@@ -129,14 +172,16 @@ Both enum and sealed class represent a closed set of types. The difference is in
 | | Enum | Sealed Class |
 |---|---|---|
 | **What it is** | ADT — a sum of data | Closed OOP hierarchy |
-| **Per-variant methods** | Not allowed | Allowed |
+| **Per-variant state** | Only declared payload | Independent fields and state |
+| **Methods** | Via `impl EnumName { ... }` | Class body + inherent impl |
 | **Per-variant trait impl** | Not allowed | Allowed |
 | **Inheritance from subtypes** | Not allowed | Allowed (if `open`/`abstract`) |
+| **Visibility differences** | No per-variant differences | Each subtype can differ |
 | **Best for** | Data classification | Behavior hierarchies |
 
 ### When to use enum
 
-Use `enum` when your variants are pure data and behavior is uniform across all of them:
+Use `enum` when your variants are pure data and behavior is shared across all of them:
 
 ```valen
 enum Color {
@@ -167,7 +212,7 @@ class TextField(pub placeholder: String, mut value: String) : Widget() {
 }
 ```
 
-**Rule of thumb:** start with `enum`. If you find yourself wishing a variant had its own method, switch to `sealed class`.
+**Rule of thumb:** start with `enum`. If you find yourself wishing a variant had its own independent state or methods, switch to `sealed class`.
 
 ## On the JVM
 
@@ -179,8 +224,8 @@ public sealed interface Shape
     permits Shape$Circle, Shape$Rect, Shape$Point {}
 
 // Payload variants → records
-public record Shape$Circle(double r) implements Shape {}
-public record Shape$Rect(double w, double h) implements Shape {}
+public record Shape$Circle(float r) implements Shape {}
+public record Shape$Rect(float w, float h) implements Shape {}
 
 // No-payload variants → singletons
 public final class Shape$Point implements Shape {
@@ -190,6 +235,8 @@ public final class Shape$Point implements Shape {
 ```
 
 Java code can work with Valen enums using `$`-separated names (e.g., `Shape$Circle`). Payload variants become records with named components; no-payload variants become singletons for memory efficiency.
+
+Inherent `impl` and trait `impl` methods are emitted on the sealed interface side, so they're available on all variants.
 
 ## Next Steps
 

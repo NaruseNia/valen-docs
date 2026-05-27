@@ -1,6 +1,6 @@
 # Generics
 
-Generics let you write code that works with any type — until you tell it not to. Valen uses angle-bracket syntax like Java and Kotlin, supports trait bounds for constraints, and adds declaration-site variance so you don't have to think about `? extends` ever again.
+Generics let you write code that works with any type — until you tell it not to. Valen uses angle-bracket syntax like Java and Kotlin, supports trait bounds for constraints, and accepts declaration-site variance annotations for future enforcement.
 
 ## Basic Generics
 
@@ -96,7 +96,7 @@ fn print_value<T: Display>(value: T) {
 
 `T: Display` means "T must implement the `Display` trait." Without this bound, calling `value.display()` would be a compile error — the compiler doesn't know if `T` has that method.
 
-### Multiple Bounds
+### Multiple Bounds (Intersection Constraints)
 
 Chain bounds with `+`:
 
@@ -105,9 +105,13 @@ fn log<T: Display + Debug>(value: T) {
     println(f"display: {value.display()}");
     println(f"debug: {value.debug()}");
 }
+
+fn process<T: System + EventHandler>(system: T, world: World) -> Unit {
+    // T must implement both System and EventHandler
+}
 ```
 
-`T` must implement both `Display` and `Debug`. If it's missing either one, the call site won't compile.
+`T` must implement all listed traits. If it's missing any one of them, the call site won't compile.
 
 ### Bounds on Classes
 
@@ -132,9 +136,13 @@ class SortedList<T: Comparable>(mut items: List<T>) {
 
 You can only create a `SortedList<T>` if `T` implements `Comparable`. Try `SortedList<SomeRandomType>` and the compiler will stop you.
 
+::: info No `where` clauses
+Valen does not support `where` clauses for type bounds. All bounds are specified inline with the type parameter declaration (e.g., `<T: Foo + Bar>`). If you need complex bounds, list them all with `+`.
+:::
+
 ## Variance
 
-Variance controls how subtyping relationships between types translate to their generic wrappers. Valen uses declaration-site variance (like Kotlin), so you annotate it once in the class definition instead of at every use site.
+Variance controls how subtyping relationships between types translate to their generic wrappers. Valen uses declaration-site variance annotations (like Kotlin), so you annotate it once in the class definition instead of at every use site.
 
 | Annotation | Name | Meaning | Java equivalent |
 |------------|------|---------|-----------------|
@@ -151,18 +159,14 @@ class Producer<out T>(value: T) {
 }
 
 // Contravariant: only consumes T (takes it as input, never returns it)
-class Consumer<in T> {
-    fn accept(self, value: T) {
-        // process value
-    }
+trait Consumer<in T> {
+    fn accept(self, value: T) -> Unit;
 }
 ```
 
-With `out T`, a `Producer<Dog>` can be used where a `Producer<Animal>` is expected (assuming `Dog` extends `Animal`). The subtyping flows in the same direction — hence "covariant."
-
-With `in T`, it's the opposite: a `Consumer<Animal>` can be used where a `Consumer<Dog>` is expected. The subtyping flows in reverse — "contravariant."
-
-**When in doubt, leave variance unspecified.** Invariant is always safe. Add `out` or `in` when you find yourself fighting the type checker on assignments that should clearly work.
+::: warning Variance is parsed but not enforced
+The compiler accepts `in` and `out` annotations and stores them in the AST, but **variance constraints are not currently checked or enforced**. This means the compiler won't stop you from putting `T` in a contravariant position when you declared `out T`. Semantic enforcement is planned for a future release. For now, the annotations serve as documentation of your intent.
+:::
 
 ## Type Erasure on the JVM
 
@@ -177,7 +181,7 @@ let b: Box<String> = Box(value = "hello");
 // At runtime, a and b are both just Box — the JVM doesn't know about Int or String
 ```
 
-This means you can't do `value is T` or `T::class` with a normal generic type parameter. The type information simply isn't there at runtime.
+This means you can't do `value is T` or `value as T` with a normal generic type parameter. The type information simply isn't there at runtime.
 
 ## Reified Generics (extracting the real type)
 
@@ -195,15 +199,6 @@ isInstance<Int>("hello")      // false
 With `reified T` you can:
 - **Type check:** `value is T`
 - **Cast:** `value as T`
-- **Get the class:** `T::class`
-
-```valen
-inline fn <reified T> fromJson(json: String) -> T {
-    deserialize(json, T::class) as T
-}
-
-let user = fromJson<User>(jsonStr);
-```
 
 ::: tip
 `reified` only works on `inline fn`. Regular functions, classes, traits, and enums cannot have reified type parameters. For the full details, see the [Inline Functions & Reified Generics](/guide/inline-reified) chapter.

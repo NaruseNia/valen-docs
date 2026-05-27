@@ -12,7 +12,24 @@ trait Display {
 }
 ```
 
-Traits declare method signatures that types must implement. Default method bodies are not currently supported.
+All trait methods are forced to `pub` visibility. Even if you write a visibility modifier on a trait method, it is ignored — the parser hardcodes all trait methods as `Visibility::Pub`.
+
+## Default Methods
+
+Trait methods can have a default implementation (a body). If an `impl` block omits a method that has a default body, the default is used instead of raising a compile error.
+
+```valen
+trait Greet {
+    fn greet(self) -> String { "hello" }
+}
+
+class Dog {}
+
+// greet omitted — default implementation is used
+impl Greet for Dog {}
+```
+
+- If the impl provides the same method, it overrides the default (signature must match).
 
 ## impl Trait for Type
 
@@ -28,7 +45,11 @@ impl Area for Shape {
 }
 ```
 
-Class body methods do **not** satisfy trait requirements. Trait implementation always requires an explicit `impl Trait for Type { ... }` block.
+Class body methods do **not** satisfy trait requirements. Trait implementation always requires an explicit `impl Trait for Type { ... }` block. If a class body has a method with the same name and signature as a trait method, calling `value.foo()` resolves to the class body method.
+
+::: info
+All methods inside `impl` blocks are forced to `pub` by the resolver, regardless of what visibility modifier you write. impl methods are effectively always public.
+:::
 
 ## Inherent impl
 
@@ -43,12 +64,22 @@ impl Vec2 {
 
 Classes can also define methods in the class body — inherent `impl` is optional for classes.
 
+## Receiver
+
+| Form | Meaning |
+|---|---|
+| `fn f(self)` | Explicit self receiver |
+| `fn f(mut self)` | Mutable self receiver |
+| `fn f(&self)` / `fn f(&mut self)` | **Not supported** (no ownership model) |
+
 ## Orphan Rule
 
 `impl Trait for Type` is allowed only if **at least one** of the following holds:
 
-- `Trait` is defined in the current **module**.
-- The outermost nominal type constructor of `Type` is owned by the current **module**.
+- `Trait` is defined in the current **compilation unit**.
+- The outermost nominal type constructor of `Type` is owned by the current **compilation unit**.
+
+The coherence checker determines ownership based on definitions in the HIR `local_defs`. Prelude-injected synthetic types are excluded. Names that only appear via import are considered "foreign".
 
 ### Prohibited
 
@@ -64,7 +95,18 @@ Classes can also define methods in the class body — inherent `impl` is optiona
 
 ### Uniqueness
 
-Each `(Trait, Type)` pair has exactly one global implementation. Duplicate impls across modules are a compile error.
+Each `(Trait, Type)` pair has exactly one global implementation. Duplicate impls are a compile error.
+
+### Trait Satisfaction
+
+- Trait method implementation is only established inside an `impl Trait for Type { ... }` block.
+- A class body method with the same name/signature as a trait method does **not** satisfy the trait.
+- When both exist, `value.foo()` resolves to the class body method first.
+
+### Conflict Resolution
+
+1. Class body member (method / associated function) takes highest priority if applicable.
+2. When multiple trait methods are candidates and ambiguous, use UFCS: `Trait::foo(value, args)`.
 
 ## UFCS (Uniform Function Call Syntax)
 
@@ -108,12 +150,16 @@ match e {
 | Permit scope                      | Same compilation unit                     |
 | JVM ABI                           | `sealed interface` with `PermittedSubclasses` |
 
+::: warning
+Supertraits (e.g. `sealed trait Foo: Bar`) are **not supported**. See [Intersection Constraints](#intersection-constraints) for the current alternative.
+:::
+
 ## Associated Type
 
 ```valen
 trait Container {
     type Item;
-    fn get(self, index: Int) -> Self::Item;
+    fn get(self, index: Int) -> Self;  // Note: Self::Item is not implemented
 }
 
 impl Container for IntList {
@@ -122,9 +168,14 @@ impl Container for IntList {
 }
 ```
 
-- Referenced via `Self::Name` inside the trait.
 - One concrete type per impl.
-- Default type allowed: `type Item = Int;` in the trait definition.
+- Default type allowed in the trait definition: `type Item = Int;`.
+
+::: warning Future
+**`Self::AssocType` reference syntax is not implemented.** The parser does not resolve `Self::Item` as a type path. Type paths use `.` (dot) for segments, and `::` is only for value-level variant access.
+
+As a workaround, stdlib operator traits use `Self` as the return type instead of `Self::Output`.
+:::
 
 ## derives
 
@@ -155,20 +206,20 @@ Implement the corresponding trait from the prelude to overload an operator.
 
 | Operator | Trait       | Method Signature                              |
 |----------|-------------|-----------------------------------------------|
-| `+`      | `Add<Rhs>`  | `fn add(self, rhs: Rhs) -> Self::Output`     |
-| `-`      | `Sub<Rhs>`  | `fn sub(self, rhs: Rhs) -> Self::Output`     |
-| `*`      | `Mul<Rhs>`  | `fn mul(self, rhs: Rhs) -> Self::Output`     |
-| `/`      | `Div<Rhs>`  | `fn div(self, rhs: Rhs) -> Self::Output`     |
-| `%`      | `Rem<Rhs>`  | `fn rem(self, rhs: Rhs) -> Self::Output`     |
+| `+`      | `Add<Rhs>`  | `fn add(self, rhs: Rhs) -> Self`             |
+| `-`      | `Sub<Rhs>`  | `fn sub(self, rhs: Rhs) -> Self`             |
+| `*`      | `Mul<Rhs>`  | `fn mul(self, rhs: Rhs) -> Self`             |
+| `/`      | `Div<Rhs>`  | `fn div(self, rhs: Rhs) -> Self`             |
+| `%`      | `Rem<Rhs>`  | `fn rem(self, rhs: Rhs) -> Self`             |
 
-Each arithmetic trait has an associated `type Output`.
+Each arithmetic trait declares an associated `type Output`, but since `Self::Output` is [not yet implemented](#associated-type), the method return type is `Self`.
 
 ### Unary Operators
 
 | Operator | Trait  | Method Signature                     |
 |----------|--------|--------------------------------------|
-| `-x`     | `Neg`  | `fn neg(self) -> Self::Output`       |
-| `!x`     | `Not`  | `fn not(self) -> Self::Output`       |
+| `-x`     | `Neg`  | `fn neg(self) -> Self`               |
+| `!x`     | `Not`  | `fn not(self) -> Self`               |
 
 ### Comparison Operators
 
@@ -201,9 +252,16 @@ impl Add<Vec2> for Vec2 {
 
 ## Intersection Constraints
 
-Use `+` to require multiple trait bounds:
+Use `+` to require multiple trait bounds on a type parameter:
 
 ```valen
-fn process<T: System + EventHandler>(system: T) -> Unit { /* ... */ }
-trait Queryable: Component + Eq { /* ... */ }
+fn process<T: System + EventHandler>(system: T, world: World) -> Unit { ... }
 ```
+
+When `T: A + B` is declared, both `A` and `B` methods are callable on `T`, and any concrete type substituted for `T` must implement both.
+
+::: warning Future — Supertraits
+Supertrait syntax (e.g. `trait Queryable: Component + Eq { ... }`) is **not implemented**. The AST does not have a `supertypes` field for trait declarations, and the parser does not parse a supertrait list after `:`.
+
+As a workaround, require all bounds at the use site: `T: Queryable + Component + Eq`.
+:::

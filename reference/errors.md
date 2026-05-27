@@ -7,7 +7,7 @@ Valen separates failure handling into four distinct mechanisms. Each has exactly
 | Mechanism | Purpose | Typical Use |
 |---|---|---|
 | `Option<T>` | Value absence | "Not found" is a normal outcome |
-| `Result<T, E>` | Recoverable failure (`E: Error`) | Caller can and should handle it |
+| `Result<T, E>` | Recoverable failure | Caller can and should handle it |
 | `panic` | Contract violation / unreachable | Bug detected — stop the program |
 | Exception | Java FFI boundary only | Java threw; you catch at the border |
 
@@ -15,7 +15,11 @@ Valen separates failure handling into four distinct mechanisms. Each has exactly
 
 ## Option\<T\>
 
-`Option<T>` (sugar: `T?`) represents a value that may or may not exist. Two variants: `Some(value)` and `None`.
+`Option<T>` represents a value that may or may not exist. Two variants: `Some(value)` and `None`.
+
+::: info
+`T?` is **not** sugar for `Option<T>`. `T?` is a distinct nullable JVM type (`Ty::Nullable`). See [Java Interop](./java-interop) for details.
+:::
 
 ### Methods
 
@@ -30,7 +34,11 @@ Valen separates failure handling into four distinct mechanisms. Each has exactly
 
 ## Result\<T, E\>
 
-`Result<T, E>` represents a computation that can succeed (`Ok(value)`) or fail (`Err(error)`). `E` must implement the `Error` trait.
+`Result<T, E>` represents a computation that can succeed (`Ok(value)`) or fail (`Err(error)`).
+
+::: info
+`E` has **no** `E: Error` trait constraint. The stdlib defines `Result<T, E>` without a bound on `E`, and the type checker does not enforce one. Any type can be used as `E`. A future version may introduce an `E: Error` requirement, but currently it is unconstrained.
+:::
 
 ### Methods
 
@@ -45,7 +53,7 @@ Valen separates failure handling into four distinct mechanisms. Each has exactly
 
 ## Error Trait
 
-Defined in `valen.core`. All `Result<T, E>` error types must implement it.
+Defined in `valen.core`. User-defined error types can implement it, but it is not required by `Result`.
 
 ```valen
 trait Error {
@@ -75,11 +83,15 @@ impl Error for AppError {
 
 | Context | Behavior | Requirement |
 |---|---|---|
-| `Result<T, E>` | `Ok(v)` → `v`, `Err(e)` → early return `Err(e)` | Enclosing function returns `Result<U, E>` with **same `E`** |
-| `Option<T>` | `Some(v)` → `v`, `None` → early return `None` | Enclosing function returns `Option<U>` |
+| `Result<T, E>` | `Ok(v)` → `v`, `Err(e)` → early return `Err(e)` | Enclosing function returns `Result<..>` |
+| `Option<T>` | `Some(v)` → `v`, `None` → early return `None` | Enclosing function returns `Option<..>` |
 
-- `?` does **not** auto-convert between error types. Use `map_err` for explicit conversion.
 - `Option` → `Result` implicit promotion is forbidden.
+- `?` cannot be used on `T?` (nullable types). It only works on `Option<T>` and `Result<T, E>`.
+
+::: warning
+**Error type identity is not verified.** The type checker confirms the target is `Result<T, E>` or `Option<T>` and that the enclosing function returns the same wrapper type, but it does **not** check that the `E` types match. Using `?` across different error types compiles without error. Use `map_err` for explicit conversion to maintain correctness.
+:::
 
 ```valen
 fn find_user(id: Int) -> Result<User, DbError> {
@@ -87,6 +99,7 @@ fn find_user(id: Int) -> Result<User, DbError> {
     Ok(User::from_row(row))
 }
 
+// Different error types — use map_err for conversion
 fn load(path: String) -> Result<Data, AppError> {
     let content = read_file(path)
         .map_err(|e| AppError::IoFailed(e.message()))?;
@@ -104,21 +117,21 @@ fn first_char(s: String) -> Option<Char> {
 
 Wraps Java method calls, catching exceptions and normalizing null.
 
-**Return type:** `Result<T?, JavaException>`
+**Return type:** `Result<T, JavaException>` (where non-void Java returns are `T?` inside the `Ok`)
 
 - Exception → `Err(JavaException)`
 - Success → `Ok(value)`, where non-void returns are `T?` (nullable)
 - `void` methods return `Unit`
 
 ```valen
-fn read_safe(path: String) -> Result<String?, JavaException> {
+fn read_safe(path: String) -> Result<String, JavaException> {
     safe { java.nio.file.Files.readString(java.nio.file.Paths.get(path)) }
 }
 ```
 
 ### `safe expr` (Shorthand)
 
-Equivalent to `safe { expr }`.
+Equivalent to `safe { expr }`. No braces needed for a single expression.
 
 ```valen
 let r = safe file.readString();  // Result<String?, JavaException>
@@ -126,10 +139,11 @@ let r = safe file.readString();  // Result<String?, JavaException>
 
 ### `safe? expr`
 
-Equivalent to `safe { expr }?`. Unwraps the `Result` via `?` and returns `T?`.
+Equivalent to `safe { expr }?`. Unwraps the `Result` via `?` and returns `T?` directly.
 
 ```valen
 let s: String? = safe? file.readString();
+// equivalent to: safe { file.readString() }?
 ```
 
 ## Java Method Call Modes
@@ -139,7 +153,10 @@ let s: String? = safe? file.readString();
 | `safe { expr }` / `safe expr` | `Result<T?, JavaException>` | Wrapped in `Err` | `T?` (nullable) |
 | `safe? expr` | `T?` | Early return via `?` | `T?` (nullable) |
 | `unsafe { expr }` / `unsafe expr` | `T` (non-nullable) | Pass-through (crash) | NPE risk |
-| Bare call | **Compile error** | — | — |
+
+::: warning Future
+Bare Java method calls (without `safe` or `unsafe`) are intended to be a compile error, but **this restriction is not currently enforced**. Bare calls compile successfully. A future version will reject them.
+:::
 
 **Exception:** Java constructor calls require no `safe`/`unsafe` wrapper. Constructors always return non-null; if they throw, no object is created.
 
@@ -159,6 +176,15 @@ Bypasses Valen's type and failure-model safety guarantees.
 | Java exception bypass | Java calls without catch | Unhandled exception |
 | Non-nullable null | `let x: String = unsafe { null };` | NPE |
 
+### `unsafe` Shorthand
+
+Single-expression form without braces:
+
+```valen
+let pos: Position = unsafe obj as Position;
+// equivalent to: unsafe { obj as Position }
+```
+
 ### `unsafe fn`
 
 The entire function body is an implicit unsafe context. Callers must wrap invocations in `unsafe { }`.
@@ -167,6 +193,18 @@ The entire function body is an implicit unsafe context. Callers must wrap invoca
 unsafe fn rawAccess(ptr: Long) -> Int { ... }
 
 let v = unsafe { rawAccess(ptr) };
+```
+
+## `as` Cast
+
+`expr as Type` performs a type cast. Safety depends on the conversion:
+
+- **Safe (no `unsafe` needed):** Numeric widening (`42 as Long`, `'A' as Int`)
+- **Unsafe required:** Downcast (`obj as Position` — `ClassCastException` risk)
+
+```valen
+let x: Long = 42 as Long;                     // safe widening
+let pos: Position = unsafe { obj as Position }; // unsafe downcast
 ```
 
 ## panic

@@ -70,7 +70,7 @@ fn main() {
 ```
 
 ::: tip .vln, not .val
-Valen source files use the `.vln` extension. We considered `.val`, but that was already taken by about twelve other things.
+Valen source files use the `.vln` extension and must be encoded in UTF-8. We considered `.val`, but that was already taken by about twelve other things.
 :::
 
 Compile it:
@@ -82,7 +82,7 @@ valenc hello.vln
 This produces a `.class` file. Run it with Java:
 
 ```sh
-java -cp . com.example.hello.MainKt
+java -cp . com.example.hello.Main
 ```
 
 You should see:

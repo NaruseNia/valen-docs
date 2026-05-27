@@ -34,19 +34,6 @@ match find_user(42) {
 }
 ```
 
-### The `T?` Shorthand
-
-`T?` is sugar for `Option<T>`. Use whichever reads better:
-
-```valen
-fn first_name(full_name: String?) -> String {
-    match full_name {
-        Some(name) => name,
-        None => "Anonymous",
-    }
-}
-```
-
 ### Option Methods
 
 | Method | Signature | What It Does |
@@ -58,9 +45,31 @@ fn first_name(full_name: String?) -> String {
 | `isSome` | `fn isSome(self) -> Bool` | Is there a value? |
 | `isNone` | `fn isNone(self) -> Bool` | Is it empty? |
 
+## `T?` — Nullable Type (Not `Option<T>`)
+
+Here's something important: **`T?` is NOT sugar for `Option<T>`.** They are completely separate types.
+
+| Type | What It Is | Used For |
+|---|---|---|
+| `Option<T>` | Valen-native ADT enum with `Some(T)` / `None` | Valen-native absence modeling |
+| `T?` | Nullable type (`Ty::Nullable`) | JVM null interop, Java method returns |
+
+`Option<T>` is a Valen enum — it's a proper ADT with pattern matching. `T?` is a type-system annotation that says "this value might be JVM null." They exist in different layers of the language.
+
+When does `T?` appear? Primarily in Java interop — when a `safe { }` block calls a Java method, the return value is typed as `T?` because Java methods can always return null. See [Java Interop](./java-interop) for the full story.
+
+### The `?` Operator Works on `Option` and `Result` — NOT on `T?`
+
+The `?` (try) operator extracts the success value or early-returns the failure. It works on:
+
+- `Option<T>` — extracts `Some(v)` or returns `None`
+- `Result<T, E>` — extracts `Ok(v)` or returns `Err(e)`
+
+It does **not** work on `T?` (nullable types). If you have a nullable value from Java interop, you'll need to handle it with pattern matching or conversion.
+
 ## Result — "This Might Fail, But You Can Handle It"
 
-`Result<T, E>` is either `Ok(value)` or `Err(error)`. The error type `E` must implement the `Error` trait.
+`Result<T, E>` is either `Ok(value)` or `Err(error)`.
 
 ### The Error Trait
 
@@ -89,6 +98,10 @@ impl Error for AppError {
     }
 }
 ```
+
+::: info No `E: Error` constraint
+`Result<T, E>` does not require `E` to implement the `Error` trait. You can use any type as the error — `String`, an enum, a data class, whatever makes sense. Implementing `Error` is recommended but not enforced.
+:::
 
 ### Using Result
 
@@ -126,7 +139,7 @@ fn find_user(id: Int) -> Result<User, DbError> {
 }
 ```
 
-**Important:** `?` only propagates errors of the **same type**. If the error types differ, you need `mapErr` to convert:
+When the error types differ, use `mapErr` to convert:
 
 ```valen
 fn load(path: String) -> Result<Data, AppError> {
@@ -139,6 +152,10 @@ fn load(path: String) -> Result<Data, AppError> {
 ```
 
 No implicit error conversion magic. You always know exactly what's happening.
+
+::: info Error type checking
+The type checker verifies that `?` is applied to a `Result` or `Option` and that the enclosing function returns the same wrapper type. However, it does not currently verify that the `E` type in `Result<T, E>` matches between the `?` expression and the function return type. Use `mapErr` to convert between error types explicitly.
+:::
 
 ### `?` on Option
 
@@ -164,15 +181,15 @@ let value = find_something()
 
 ## `safe { }` — Taming Java Exceptions
 
-Java methods throw exceptions. Valen methods don't. The `safe { }` block is the bridge between these two worlds — it catches Java exceptions and wraps them into `Result<T?, JavaException>`.
+Java methods throw exceptions. Valen methods don't. The `safe { }` block is the bridge between these two worlds — it catches Java exceptions and wraps them into `Result<T, JavaException>`.
 
 ```valen
-fn read_safe(path: String) -> Result<String?, JavaException> {
+fn read_safe(path: String) -> Result<String, JavaException> {
     safe { java.nio.file.Files.readString(java.nio.file.Paths.get(path)) }
 }
 ```
 
-If the Java method succeeds, you get `Ok(value)`. If it throws, you get `Err(JavaException)`. Java's null becomes `T?` (because Java methods can always return null — even when they pinky-promise they won't).
+If the Java method succeeds, you get `Ok(value)`. If it throws, you get `Err(JavaException)`. Java return values inside `safe { }` are automatically typed as nullable (`T?`) because Java methods can always return null — even when they promise they won't.
 
 ### Shorthand: `safe expr`
 
@@ -181,6 +198,8 @@ For one-liners, drop the braces:
 ```valen
 let r = safe file.readString();  // Result<String?, JavaException>
 ```
+
+This is exactly equivalent to `safe { file.readString() }`.
 
 ### `safe?` — The Combo Move
 
@@ -244,6 +263,7 @@ No unwrap-and-pray. Always provide a fallback.
 ```
 Value might be absent?            -> Option<T>
 Operation might fail recoverably? -> Result<T, E>
+JVM null from Java interop?       -> T? (nullable type)
 Bug or unreachable code?          -> panic
 Java method might throw?          -> safe { } to get a Result
 Want it even shorter?             -> safe? expr

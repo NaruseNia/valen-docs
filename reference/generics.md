@@ -65,6 +65,10 @@ Bounds work on class type parameters as well:
 class SortedList<T: Comparable>(mut items: List<T>) { ... }
 ```
 
+::: info
+**`where` clauses are not supported.** All bounds must be declared inline at the type parameter site (`T: Bound`). There is no `where T: Bound` syntax.
+:::
+
 ## Variance
 
 Declared at the type parameter site. Controls subtyping direction.
@@ -85,7 +89,9 @@ class Consumer<in T> {
 }
 ```
 
-With `out T`, `Producer<Dog>` is assignable to `Producer<Animal>` when `Dog` is a subtype of `Animal`.
+::: warning
+**Variance is parsed but not enforced.** The parser recognizes `out` and `in` annotations and stores them as `Variance::Covariant` / `Variance::Contravariant`, but the type checker does **not** validate variance constraints. For example, using an `out T` in an input position compiles without error. Enforcement is planned for a future phase.
+:::
 
 ## Explicit Type Arguments
 
@@ -115,11 +121,15 @@ let b = isInstance<Int>("hello");     // false
 
 ### Operations on `reified T`
 
-| Operation | Syntax | JVM Codegen |
-|---|---|---|
-| Type check | `value is T` | `instanceof ConcreteType` |
-| Cast | `value as T` | `checkcast ConcreteType` |
-| Class literal | `T::class` | `ldc ConcreteType.class` |
+| Operation | Syntax | JVM Codegen | Status |
+|---|---|---|---|
+| Type check | `value is T` | `instanceof ConcreteType` | Implemented |
+| Cast | `value as T` | `checkcast ConcreteType` | Implemented |
+| Class literal | `T::class` | `ldc ConcreteType.class` | **Not implemented** |
+
+::: warning
+`T::class` is not yet supported. Only `is` and `as` operations work with reified type parameters.
+:::
 
 ### Constraints
 

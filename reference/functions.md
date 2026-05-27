@@ -40,19 +40,41 @@ greet(count = 5)     // msg = "hi", count = 5
 - Works on class / data class constructor parameters as well.
 - Trait methods can declare defaults; implementations **cannot** override them.
 
-## Receivers: self / mut self
+## Receivers: `self` / `mut self`
+
+The first parameter of a method can be `self` or `mut self` to make it an instance method. The parser treats `self` as a parameter of type `Self`.
 
 | Receiver    | Meaning                             |
 |-------------|-------------------------------------|
-| `self`      | Immutable receiver (instance method) |
-| `mut self`  | Mutable receiver                     |
-| *(none)*    | Associated function (no instance)    |
+| `self`      | Immutable receiver (read-only)      |
+| `mut self`  | Mutable receiver (can write fields) |
+| *(none)*    | Associated function (no instance)   |
 
 ```valen
-class Vec2(pub x: Float, pub y: Float) {
-    fn length(self) -> Float { /* ... */ }
-    fn scale(mut self, factor: Float) { /* ... */ }
-    fn zero() -> Vec2 { Vec2(x = 0.0, y = 0.0) }  // associated
+class Counter {
+    let mut count: Int = 0;
+
+    fn increment(mut self) {
+        self.count += 1;
+    }
+
+    fn get(self) -> Int {
+        self.count
+    }
+}
+```
+
+Trait methods use `self` / `mut self` in the same way:
+
+```valen
+trait Printable {
+    fn print(self);
+}
+
+impl Printable for Counter {
+    fn print(self) {
+        println(f"count: {self.get()}");
+    }
 }
 ```
 
@@ -74,7 +96,118 @@ let u = User::from_name("Alice");
 
 There is no `static` keyword. The presence or absence of `self` is the only distinction.
 
-## inline fn
+## UFCS (Uniform Function Call Syntax)
+
+Method syntax `value.method(args)` is first-class. When there is ambiguity between multiple traits, use **`Trait::method(receiver, args)`** to disambiguate.
+
+```valen
+trait Mappable<T> {
+    fn map<U>(self, f: fn(T) -> U) -> Mappable<U>;
+}
+
+// Normal method call
+xs.map(|x| x * 2);
+
+// Disambiguation (explicit trait)
+Mappable::map(xs, |x| x * 2);
+```
+
+**Prohibited forms:**
+- ~~`map(xs, f)` form~~ — indistinguishable from top-level function call
+- `foo(args)` always resolves as a top-level function call. Trait methods cannot be called in function-call style.
+
+## Type Inference
+
+- **Local variables**: Type inference is available. `let x = 42;` infers `Int`.
+- **Function signatures**: Parameter types and return types are **always explicit**. Omitting them is a compile error.
+
+```valen
+let x = 42;           // x: Int (inferred)
+let y = f"{x}";       // y: String (inferred)
+
+// fn signatures must be explicit
+fn add(a: Int, b: Int) -> Int {
+    a + b  // inference within body
+}
+```
+
+## Lambdas (Closures)
+
+`|params| body` creates a lambda expression.
+
+```valen
+let add = |a: Int, b: Int| a + b;
+let unit = || 42;
+```
+
+Parameter types can be omitted when inferable from context.
+
+### Return Type Annotation
+
+`|params| -> Type body` adds an explicit return type:
+
+```valen
+let parse = |s: String| -> Int {
+    s.toInt()
+};
+```
+
+### Arity Limit
+
+Codegen maps lambdas to `java.util.function` standard functional interfaces, limiting parameters to **2 at most**.
+
+| Parameters | JVM Mapping |
+|------------|-------------|
+| 0 | `java.util.function.Supplier<R>` |
+| 1 | `java.util.function.Function<T, R>` |
+| 2 | `java.util.function.BiFunction<T, U, R>` |
+
+A lambda with 3 or more parameters is a compile error.
+
+## `unsafe fn`
+
+`unsafe fn` declares a function that requires an `unsafe { }` block at the call site. Use it for operations that bypass safety guarantees (unchecked casts, low-level JVM operations, etc.).
+
+```valen
+unsafe fn cast_unchecked<T>(obj: Any) -> T {
+    obj as T
+}
+
+// Call site
+let value: Int = unsafe { cast_unchecked(raw) };
+```
+
+`unsafe fn` and `inline fn` can be combined:
+
+```valen
+unsafe inline fn fast_cast<T>(obj: Any) -> T {
+    obj as T
+}
+```
+
+The parser handles `unsafe fn` / `unsafe inline fn` via `is_unsafe` / `is_inline` flags on `FnDecl`.
+
+## Trait Method Default Bodies
+
+Trait methods can omit the body (abstract method) or provide a default implementation.
+
+```valen
+trait Summary {
+    // Abstract — impl must provide a body
+    fn summarize(self) -> String;
+
+    // Default implementation — impl may override
+    fn preview(self) -> String {
+        let s = self.summarize();
+        f"{s}..."
+    }
+}
+```
+
+- No body (`;` terminator) — `is_abstract = true`, `body = None`
+- With body (`{ ... }`) — `is_abstract = false`, `body = Some(...)`
+
+## `inline fn`
 
 `inline fn` expands its body at the call site. Lambda arguments are also inlined, avoiding boxing overhead.
 
@@ -87,6 +220,23 @@ inline fn <T> measure(block: fn() -> T) -> T {
 }
 ```
 
+### Lambda Inlining
+
+Lambdas passed to `inline fn` are expanded at the call site:
+
+```valen
+inline fn <T> run(block: fn() -> T) -> T {
+    block()
+}
+
+fn main() {
+    let x = run(|| { 42 });
+    // block() body is inlined here
+}
+```
+
+Non-local return (a `return` inside a lambda exiting the enclosing function) is not supported. Use tail expressions instead.
+
 ### Restrictions
 
 | Restriction              | Reason                                |
@@ -97,7 +247,7 @@ inline fn <T> measure(block: fn() -> T) -> T {
 
 From Java, `inline fn` appears as a normal method. `reified` parameters become erased.
 
-## reified Type Parameters
+## `reified` Type Parameters
 
 `reified` parameters are only available inside `inline fn`. They preserve concrete type information at runtime, bypassing JVM type erasure.
 
@@ -112,7 +262,7 @@ inline fn <reified T, U> mixed(value: Any, other: U) -> Bool {
 }
 ```
 
-### Allowed Operations with reified T
+### Allowed Operations with `reified T`
 
 | Operation     | Syntax      | JVM Codegen                    |
 |---------------|-------------|--------------------------------|
@@ -121,3 +271,18 @@ inline fn <reified T, U> mixed(value: Any, other: U) -> Bool {
 | Class literal | `T::class`   | `ldc ConcreteType.class`      |
 
 `reified` cannot be used on class, trait, or enum type parameters — only on `inline fn` type parameters. Reified and non-reified type parameters can coexist on the same function.
+
+## Built-in Functions
+
+The prelude provides these built-in functions, available without import:
+
+| Function  | Signature              | Description                        | JVM Implementation          |
+|-----------|------------------------|------------------------------------|-----------------------------|
+| `println` | `fn(String) -> Unit`   | Print string to stdout with newline | `System.out.println(String)` |
+| `print`   | `fn(String) -> Unit`   | Print string to stdout (no newline) | `System.out.print(String)`   |
+
+```valen
+println("hello world");          // hello world\n
+print("no newline");             // no newline
+println(f"count: {x}");          // works with f-strings
+```

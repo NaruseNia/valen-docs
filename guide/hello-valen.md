@@ -52,10 +52,10 @@ impl Summarize for Task {
 fn find_critical(tasks: List<Task>) -> Result<Task, String> {
     for task in tasks {
         if let Priority::Critical(_) = task.priority {
-            return Ok(task);
+            return Result::Ok(task);
         }
     }
-    Err("no critical tasks found")
+    Result::Err("no critical tasks found")
 }
 
 // -- Entry point --
@@ -72,8 +72,8 @@ fn main() {
     }
 
     match find_critical(tasks) {
-        Ok(t) => println(f"\nAlert: {t.title} needs attention!"),
-        Err(msg) => println(f"\nAll clear: {msg}"),
+        Result::Ok(t) => println(f"\nAlert: {t.title} needs attention!"),
+        Result::Err(msg) => println(f"\nAll clear: {msg}"),
     }
 }
 ```
@@ -86,7 +86,7 @@ fn main() {
 package com.example.tasks;
 ```
 
-Every Valen file starts with a `package` declaration. It's mandatory — no package, no compile. The package maps to the directory structure, just like Java.
+Every Valen file starts with a `package` declaration. It's mandatory — no package, no compile. The package maps to the directory structure, just like Java. Source files use the `.vln` extension and must be encoded in UTF-8.
 
 ### Imports
 
@@ -119,7 +119,7 @@ data class Task(
 );
 ```
 
-A `data class` auto-generates `equals`, `hashCode`, `toString`, and `copy`. The `pub` keyword makes fields readable from outside. Without it, fields are private to the class.
+A `data class` auto-generates `equals`, `hashCode`, `toString`, and `copy`. It also implicitly satisfies the `Eq`, `Hash`, `Display`, and `Clone` traits. The `pub` keyword makes fields readable from outside. Without it, fields are private to the class.
 
 No getters. No setters. No `val` vs `var` debate. Just `pub` for visible, nothing for private, and `pub mut` if you need mutability.
 
@@ -163,10 +163,10 @@ A few things to notice:
 fn find_critical(tasks: List<Task>) -> Result<Task, String> {
     for task in tasks {
         if let Priority::Critical(_) = task.priority {
-            return Ok(task);
+            return Result::Ok(task);
         }
     }
-    Err("no critical tasks found")
+    Result::Err("no critical tasks found")
 }
 ```
 
@@ -191,8 +191,8 @@ fn main() {
     }
 
     match find_critical(tasks) {
-        Ok(t) => println(f"\nAlert: {t.title} needs attention!"),
-        Err(msg) => println(f"\nAll clear: {msg}"),
+        Result::Ok(t) => println(f"\nAlert: {t.title} needs attention!"),
+        Result::Err(msg) => println(f"\nAll clear: {msg}"),
     }
 }
 ```
@@ -207,7 +207,7 @@ Save the code as `src/com/example/tasks/main.vln`, then:
 
 ```sh
 valenc src/com/example/tasks/main.vln
-java -cp . com.example.tasks.MainKt
+java -cp . com.example.tasks.Main
 ```
 
 Expected output:
@@ -231,7 +231,7 @@ In about 50 lines, you've seen:
 | **Data class** | `Task` with auto-generated methods |
 | **Trait + impl** | `Summarize` implemented for `Task` |
 | **Pattern matching** | `match` on enum, `if let` for single-pattern |
-| **Result type** | `Ok` / `Err` instead of exceptions |
+| **Result type** | `Result::Ok` / `Result::Err` instead of exceptions |
 | **Expression-oriented** | `if` and `match` as expressions |
 | **Format strings** | `f"..."` interpolation |
 | **Java interop** | `List.of(...)` from `java.util.List` |
@@ -241,7 +241,7 @@ In about 50 lines, you've seen:
 Now that you've seen the big picture, it's time to dig into the details:
 
 - **[Variables & Types](./variables-and-types)** — primitives, type inference, and why there's no implicit conversion
-- **[Functions](./functions)** — named args, UFCS, and how `self` works
+- **[Functions](./functions)** — named args, default params, UFCS, and how `self` works
 - **[Enums & ADTs](./enums)** — variant shorthands, sealed classes, and when to use which
 - **[Traits](./traits)** — orphan rules, coherence, and inherent impls
 - **[Error Handling](./error-handling)** — the `?` operator, `safe { ... }`, and the full failure model

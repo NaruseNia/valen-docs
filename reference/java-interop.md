@@ -27,7 +27,7 @@ let map = HashMap<String, Int>();
 
 ## Method Calls
 
-Bare Java method calls are a **compile error**. Every call must be wrapped.
+Every Java method call should be wrapped in `safe` or `unsafe`.
 
 | Mode | Return Type | Exceptions | Nulls |
 |---|---|---|---|
@@ -36,6 +36,10 @@ Bare Java method calls are a **compile error**. Every call must be wrapped.
 | `safe? expr` | `T?` | Early return via `?` | `T?` (nullable) |
 | `unsafe { expr }` | `T` (non-nullable) | Pass-through | NPE risk |
 | `unsafe expr` | `T` (non-nullable) | Pass-through | NPE risk |
+
+::: warning Future
+Bare Java method calls (without `safe` or `unsafe`) are intended to be a compile error, but **this restriction is not currently enforced**. Bare calls compile successfully. A future version will reject them.
+:::
 
 ```valen
 // safe block — full control
@@ -50,14 +54,27 @@ let raw: String = unsafe { file.readString() };
 
 ## Null Handling
 
-All Java method return values inside `safe { }` are typed as `T?` (`Option<T>`). There are no platform types (`T!`) — Java values are always treated as potentially null.
+### `T?` is a Nullable JVM Type
+
+`T?` in Valen represents a **nullable JVM type** (`Ty::Nullable`). It is **not** `Option<T>`. These are two completely distinct types in the type system:
+
+| Type | Internal Representation | Usage |
+|---|---|---|
+| `T?` | `Ty::Nullable(Box<Ty>)` | JVM null-permitting type, primarily for Java interop |
+| `Option<T>` | `enum Option<T> { Some(T), None }` | Valen-native absence type (ADT) |
+
+### Java Method Returns Inside `safe { }`
+
+All Java method return values inside `safe { }` are typed as `T?` (nullable). There are no platform types (`T!`) — Java values are always treated as potentially null.
 
 ```valen
-let val: Option<String> = safe { map.get("key") }?;
+// Java: V Map.get(K key) — may return null
+let val = safe { map.get("key") };   // Result<String?, JavaException>
 
 match val {
-    Some(v) => println(v),
-    None => println("not found"),
+    Ok(Some(v)) => println(v),
+    Ok(None) => println("null returned"),
+    Err(e) => println(f"exception: {e.message()}"),
 }
 ```
 

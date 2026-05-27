@@ -18,6 +18,32 @@ trait Display {
 
 No method bodies here — just the shapes of things to come. (Pun intended.)
 
+### Default Methods
+
+Traits can also provide default implementations. Implementors can override them or leave the default:
+
+```valen
+trait Greet {
+    fn greet(self) -> String { "hello" }
+}
+
+class Dog {}
+
+// greet is not implemented here — the default is used
+impl Greet for Dog {}
+
+let d = Dog();
+println(d.greet());  // "hello"
+```
+
+If you want to override the default, just provide your own implementation in the `impl` block:
+
+```valen
+impl Greet for Cat {
+    fn greet(self) -> String { "meow" }
+}
+```
+
 ## Implementing a Trait
 
 Use `impl Trait for Type` to teach a type how to fulfill a trait's contract:
@@ -41,6 +67,10 @@ impl Area for Shape {
 ```
 
 Now anything that expects `Area` can work with `Shape`. No base classes, no `extends`, no existential dread.
+
+::: info All trait/impl methods are public
+The compiler forces all methods inside `trait` definitions and `impl` blocks to be `pub`, regardless of what visibility modifier you write. This is by design — trait contracts are public interfaces.
+:::
 
 ## Inherent Impl — Methods Without a Trait
 
@@ -108,8 +138,8 @@ impl Counter for ClickTracker {
 
 You can write `impl Trait for Type` only if:
 
-- **You own the trait** (it's defined in your module), **or**
-- **You own the type** (the outermost type constructor is defined in your module)
+- **You own the trait** (it's defined in your compilation unit), **or**
+- **You own the type** (the outermost type constructor is defined in your compilation unit)
 
 This means you can't go rogue and slap `Display` on `java.lang.String` from your application code. The rule keeps the ecosystem sane — no conflicting implementations floating around.
 
@@ -132,6 +162,26 @@ Also forbidden:
 
 - **typealias laundering** — `type MyList = java.util.List<Int>` doesn't make `MyList` "yours"
 - **blanket impl** — `impl<T: Foo> Bar for T` is not supported
+
+### Trait Fulfillment Rule
+
+A class body method with the same name and signature as a trait method does **not** count as implementing that trait. Trait implementation *must* happen inside `impl Trait for Type { ... }`. The two are completely independent:
+
+```valen
+trait Show {
+    fn show(self) -> String;
+}
+
+class User(pub name: String) {
+    // This is NOT a Show implementation — it's a separate method
+    fn show(self) -> String { self.name }
+}
+
+// You still need this:
+impl Show for User {
+    fn show(self) -> String { f"User({self.name})" }
+}
+```
 
 ## UFCS — When Two Traits Walk Into a Method Name
 
@@ -168,8 +218,9 @@ The syntax is `Trait::method(receiver, args...)`. The receiver goes in as the fi
 When you call `value.foo()`, the compiler resolves it in this order:
 
 1. **Class body methods** — highest priority
-2. **Trait methods** — checked if no class body match
-3. **Ambiguous?** — compile error, use UFCS
+2. **Inherent impl methods** — checked if no class body match
+3. **Trait methods** — checked if no inherent impl match
+4. **Ambiguous?** — compile error, use UFCS
 
 ::: tip Class body methods don't satisfy traits
 Even if a class body method has the exact same name and signature as a trait method, it does **not** count as implementing that trait. You still need an `impl Trait for Type { ... }` block. They're independent.
@@ -215,7 +266,10 @@ Think of sealed traits as "enum-like but with independent class definitions." Ea
 **Rules:**
 - Implementors must be `class` or `data class` (not `enum`)
 - All implementors must be in the same compilation unit
-- No default methods or supertraits
+
+::: info Supertraits are not implemented
+The syntax `trait Queryable: Component + Eq { ... }` for declaring supertrait requirements is not currently supported. As a workaround, specify all required bounds at the use site: `<T: Queryable + Component + Eq>`.
+:::
 
 ## Associated Types
 
@@ -224,7 +278,7 @@ Sometimes a trait needs a "type slot" that each implementor fills in differently
 ```valen
 trait Container {
     type Item;
-    fn get(self, index: Int) -> Self::Item;
+    fn get(self, index: Int) -> Self;  // see note below
 }
 
 impl Container for IntList {
@@ -233,18 +287,13 @@ impl Container for IntList {
         // ...
     }
 }
-
-impl Container for StringList {
-    type Item = String;
-    fn get(self, index: Int) -> String {
-        // ...
-    }
-}
 ```
 
-Reference it as `Self::Item` inside the trait. Each `impl` resolves it to a concrete type, so callers get full type inference without extra annotations.
+You can provide a default: `type Item = Int;` in the trait definition. Implementors can override it or leave the default.
 
-You can also provide a default: `type Item = Int;` in the trait definition. Implementors can override it or leave the default.
+::: warning Self::AssocType is not implemented
+The syntax `Self::Item` or `Self::Output` for referencing associated types in trait method signatures is not currently supported by the parser. As a workaround, the stdlib's operator traits use `Self` as the return type instead of `Self::Output`. This means operator implementations always return the same type as the receiver.
+:::
 
 ## Operator Overloading
 
@@ -269,20 +318,20 @@ let c = a + b;  // Vec2(x = 4.0, y = 6.0)
 
 | Operator | Trait | Method |
 |---|---|---|
-| `+` | `Add<Rhs>` | `fn add(self, rhs: Rhs) -> Self::Output` |
-| `-` | `Sub<Rhs>` | `fn sub(self, rhs: Rhs) -> Self::Output` |
-| `*` | `Mul<Rhs>` | `fn mul(self, rhs: Rhs) -> Self::Output` |
-| `/` | `Div<Rhs>` | `fn div(self, rhs: Rhs) -> Self::Output` |
-| `%` | `Rem<Rhs>` | `fn rem(self, rhs: Rhs) -> Self::Output` |
+| `+` | `Add<Rhs>` | `fn add(self, rhs: Rhs) -> Self` |
+| `-` | `Sub<Rhs>` | `fn sub(self, rhs: Rhs) -> Self` |
+| `*` | `Mul<Rhs>` | `fn mul(self, rhs: Rhs) -> Self` |
+| `/` | `Div<Rhs>` | `fn div(self, rhs: Rhs) -> Self` |
+| `%` | `Rem<Rhs>` | `fn rem(self, rhs: Rhs) -> Self` |
 
-Each trait has an associated `type Output` — so `Int + Float` could return `Float` if you wanted.
+Each trait declares an associated `type Output`, but since `Self::Output` isn't implemented yet, the return type is `Self` in practice.
 
 ### Unary Operators
 
 | Operator | Trait | Method |
 |---|---|---|
-| `-x` | `Neg` | `fn neg(self) -> Self::Output` |
-| `!x` | `Not` | `fn not(self) -> Self::Output` |
+| `-x` | `Neg` | `fn neg(self) -> Self` |
+| `!x` | `Not` | `fn not(self) -> Self` |
 
 ### Comparison: `Ord` and `Eq`
 
@@ -324,6 +373,8 @@ pub enum Color derives(Eq, Hash, Display) {
     Green,
     Blue(value: Int),
 }
+
+pub class Point(pub x: Float, pub y: Float) derives(Eq) {}
 ```
 
 ### Available derives

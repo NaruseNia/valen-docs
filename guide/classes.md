@@ -1,6 +1,6 @@
 # Classes & Data Classes
 
-Every object-oriented language has classes. Valen's twist: the constructor lives *in the class name*, there's no `new` keyword, and the compiler assumes everything is immutable and private unless you say otherwise. Welcome to the pit of success.
+Every object-oriented language has classes. Valen's twist: the constructor lives *in the class name*, there's no `new` keyword, and the compiler assumes everything is immutable and `internal` unless you say otherwise. Welcome to the pit of success.
 
 ## Primary Constructor
 
@@ -14,7 +14,7 @@ class User(pub name: String, mut age: Int) {
 }
 ```
 
-That's a class with two fields: `name` is publicly readable, `age` is privately mutable. Creating an instance is refreshingly boring:
+That's a class with two fields: `name` is publicly readable, `age` is internally mutable. Creating an instance is refreshingly boring:
 
 ```valen
 let alice = User(name = "Alice", age = 30);
@@ -24,23 +24,27 @@ No `new`. No ceremony. Just call the class like a function with named arguments.
 
 ## Field Visibility
 
-Every constructor parameter becomes a field. You control access with two modifiers — `pub` and `mut` — always in that order:
+Every constructor parameter becomes a field. You control access with modifiers — `pub`, `internal`, `private`, and `mut` — visibility always comes first, then `mut`:
 
-| Modifier   | Read from outside | Write from outside | Mutable inside |
-|------------|-------------------|--------------------|----------------|
-| *(none)*   | No                | No                 | No             |
-| `pub`      | Yes               | No                 | No             |
-| `mut`      | No                | No                 | Yes            |
-| `pub mut`  | Yes               | Yes                | Yes            |
+| Modifier       | Read from outside | Write from outside | Mutable inside |
+|----------------|-------------------|--------------------|----------------|
+| *(none)*       | Same package only | No                 | No             |
+| `pub`          | Yes               | No                 | No             |
+| `pub mut`      | Yes               | Yes                | Yes            |
+| `internal`     | Same package only | No                 | No             |
+| `internal mut` | Same package only | Same package only  | Yes            |
+| `private`      | No                | No                 | No             |
+| `private mut`  | No                | No                 | Yes            |
+| `mut`          | Same package only | Same package only  | Yes            |
 
-The default (no modifier) gives you a private, immutable field. This is intentional — Valen nudges you toward the safest option first.
+The default (no modifier) is `internal` — visible within the same package but hidden from the outside. This is intentional — Valen nudges you toward a reasonable encapsulation level first.
 
 ```valen
 class Config(
     pub name: String,          // anyone can read, nobody can write
     pub mut retries: Int,      // anyone can read and write
-    mut internal_state: Int,   // only this class can mutate
-    secret: String,            // private and frozen forever
+    mut internal_state: Int,   // same package can see and mutate
+    private secret: String,    // only this class can see it
 ) {
     fn tick(mut self) {
         self.internal_state = self.internal_state + 1;
@@ -61,7 +65,7 @@ cfg.retries = 5;         // OK
 
 ## Methods
 
-Methods live directly inside the class body. No separate `impl` block needed.
+Methods can live directly inside the class body, or in a separate `impl` block. Both work equally well.
 
 ### Instance Methods
 
@@ -108,6 +112,54 @@ println(ghost.greet());           // instance method — note the .
 ```
 
 The distinction is purely based on whether `self` appears in the parameter list. No `static` keyword exists in Valen.
+
+### Inherent `impl` Blocks
+
+You can add methods to a class *outside* its body using an inherent `impl` block. This is especially useful for organizing code or adding methods after the fact:
+
+```valen
+class Foo(pub x: Int) {
+    fn bar(self) -> Int { self.x }
+}
+
+// Add more methods later
+impl Foo {
+    fn baz(self) -> Int { self.x * 2 }
+}
+```
+
+Methods defined in inherent `impl` blocks have the same priority as class body methods. For `enum` and `data class` types (which don't have class bodies with methods), inherent `impl` is the primary way to add methods.
+
+## `derives` — Auto-Generated Methods
+
+Writing `equals`, `hashCode`, and `toString` by hand? That's what `derives` is for. Place it after the constructor (and any supertype) but before the body `{`:
+
+```valen
+class Foo(pub x: Int, pub y: Int) derives(Eq, Hash) {
+    fn bar(self) -> Int { self.x + self.y }
+}
+
+data class Point(x: Float, y: Float) derives(Eq, Hash, Display, Clone);
+
+enum Shape derives(Eq, Hash, Display) {
+    Circle(r: Float),
+    Rect(w: Float, h: Float),
+    Point,
+}
+```
+
+### Available Derives
+
+| Derive    | What You Get | Description |
+|-----------|-------------|-------------|
+| `Eq`      | `equals(Object) -> Boolean` | Field-by-field structural comparison |
+| `Hash`    | `hashCode() -> Int` | Deterministic hash (31-multiply-accumulate) |
+| `Display` | `toString() -> String` | `TypeName(field=value, ...)` format |
+| `Clone`   | `copy(...) -> Self` | Copy constructor with all fields as parameters |
+
+::: tip data class gets them for free
+`data class` automatically generates `Eq`, `Hash`, `Display`, and `Clone` without writing `derives(...)`. The `derives` clause is mainly for `class` and `enum` types.
+:::
 
 ## Default Arguments
 
@@ -164,12 +216,26 @@ let p3 = p1.copy(x = 3.0f);
 println(p3);    // Point(x=3.0, y=2.0)
 ```
 
+You can add methods to data classes via inherent `impl` blocks and trait `impl` blocks:
+
+```valen
+data class Vec2(pub x: Float, pub y: Float);
+
+impl Vec2 {
+    fn length(self) -> Float { /* ... */ }
+}
+
+impl Display for Vec2 {
+    fn display(self) -> String { f"({self.x}, {self.y})" }
+}
+```
+
 ### Data Class Restrictions
 
 - Data classes are always **final** — you can't `open` or `abstract` them
 - They cannot be superclasses
-- They *can* extend `sealed` / `open` / `abstract` classes
-- They *can* implement traits
+- Syntactically they *can* write `: SuperClass(args)`, but this is a **known limitation** — the supertype information is lost during compilation, and the data class always extends `java.lang.Object` directly. This will be fixed in a future release.
+- They *can* implement traits via `impl Trait for DataClass { ... }`
 
 ## Inheritance
 
@@ -203,7 +269,7 @@ For when you want to declare a method without implementing it:
 
 ```valen
 abstract class Shape {
-    abstract fn area(self) -> Float;
+    abstract fn area(self) -> Float { /* placeholder */ }
 
     fn describe(self) -> String {
         f"area = {self.area()}"
@@ -217,8 +283,9 @@ class Circle(pub r: Float) : Shape() {
 }
 ```
 
-- `abstract fn` has no body — subclasses must implement it
-- Abstract classes cannot be instantiated directly
+::: warning Known limitation: abstract methods need a body
+The parser currently requires all methods to have a body, even `abstract` ones. You need to provide a placeholder body (like `{ /* placeholder */ }`) for abstract methods. A future parser update will support bodyless `abstract fn area(self) -> Float;` syntax.
+:::
 
 ### Sealed Classes
 
@@ -267,6 +334,8 @@ class Dog(pub name: String) : Animal(name) {
 }
 ```
 
+`super.foo()` only calls the parent *class* method. To call a trait's default method, use UFCS: `Trait::foo(self)`.
+
 ## Coming from Java?
 
 | Java                          | Valen                                  |
@@ -274,6 +343,7 @@ class Dog(pub name: String) : Animal(name) {
 | `new User("Alice", 30)`      | `User(name = "Alice", age = 30)`       |
 | `public final class`         | `class` (final by default)             |
 | `public class`               | `open class`                           |
+| package-private (default)     | `internal` (default visibility)        |
 | `static void create()`       | `fn create()` (no `self` parameter)    |
 | `User.create()`              | `User::create()`                       |
 | `record Point(int x, int y)` | `data class Point(pub x: Int, pub y: Int);` |

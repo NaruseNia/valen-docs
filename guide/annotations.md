@@ -84,7 +84,7 @@ pub class LegacyService {
 
 ## `@Target` — Restricting Placement
 
-By default, an annotation can go on types, fields, and methods. Use `@Target` to narrow it down:
+Use `@Target` on an annotation class to declare where it's allowed:
 
 ```valen
 @Target("type")
@@ -95,6 +95,18 @@ annotation class Inject
 ```
 
 Valid targets: `"type"`, `"field"`, `"method"`.
+
+::: info @Target validation is not enforced
+The compiler parses `@Target` and stores the target information, but **does not currently validate** that annotations are applied only to the declared targets. For example, a `@Target("field")` annotation applied to a class will compile without error. Target validation is planned for a future release.
+:::
+
+## `@Retention`
+
+Valen's design default is `RUNTIME` retention — annotations are available via reflection at runtime.
+
+::: info @Retention is not implemented
+The `@Retention` annotation is not currently parsed or enforced. All annotations are treated as having runtime retention. Custom retention policies (SOURCE, CLASS) are planned for a future release.
+:::
 
 ## `@valen.Closed` — The One Built-In
 
@@ -121,7 +133,7 @@ You don't write `@valen.Closed` in Valen code — it's a Java-side annotation. S
 
 ## Java Annotations
 
-You can import and apply Java annotations to Valen declarations. Valen emits them as-is into the bytecode:
+You can import and apply Java annotations to Valen declarations. The `@Foo(...)` syntax is the same for both Valen-defined and Java-defined annotations:
 
 ```valen
 import javax.persistence.Entity;
@@ -135,8 +147,8 @@ pub class User {
 }
 ```
 
-::: info Parameter validation is trust-based
-For Java annotations, Valen doesn't validate parameter types or required fields at compile time. It trusts the annotation definition and emits what you write. If you get it wrong, the error surfaces at runtime — same as Java.
+::: warning Parameter validation is trust-based
+For Java annotations, Valen does not validate parameter types, required fields, or annotation targets at compile time. It parses what you write and emits it to bytecode on trust. If you get a parameter wrong or miss a required field, the error surfaces at runtime — not at compile time. This is because Java annotation definitions are resolved via classpath, and full classpath resolution for annotation metadata is not yet implemented.
 :::
 
 ## What's Next?

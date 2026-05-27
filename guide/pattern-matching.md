@@ -24,7 +24,7 @@ Valen supports a rich set of patterns. Let's go through them all.
 
 ### Literal Patterns
 
-Match against exact values. Works with integers, strings, booleans — the usual suspects.
+Match against exact values. Works with integers, strings, booleans, characters, floats, and longs.
 
 ```valen
 match status_code {
@@ -78,6 +78,45 @@ match shape {
 }
 ```
 
+### Variant Shorthand Patterns
+
+When the match scrutinee's type tells the compiler which enum you're matching, you can use the dot shorthand instead of the full `EnumName::Variant` path:
+
+```valen
+match color {
+    .Red => "red",
+    .Green => "green",
+    .Blue(v) => f"blue({v})",
+}
+```
+
+This is the same as writing `Color::Red`, `Color::Green`, etc. — just shorter. It works with payload destructuring too:
+
+```valen
+match shape {
+    .Circle(r) => f"circle r={r}",
+    .Rect(w, h) => f"rect {w}x{h}",
+    .Point => "point",
+}
+```
+
+The `..` (rest) pattern works with shorthand as well:
+
+```valen
+match shape {
+    .Circle(..) => "circle",
+    _ => "other",
+}
+```
+
+Variant shorthand works in `if let`, `while let`, and `let else` too:
+
+```valen
+if let .Some(x) = opt {
+    println(f"got {x}");
+}
+```
+
 ### Or-Patterns (`|`)
 
 Combine multiple patterns into one arm:
@@ -100,20 +139,27 @@ match expr {
 // Expr::Lit(v) | Expr::Neg(w)  — ERROR: mismatched names `v` vs `w`
 ```
 
+::: info Binding consistency not yet enforced
+The compiler does not currently validate that or-pattern alternatives bind the same variable names. This validation is planned for a future release. For now, writing consistent bindings is your responsibility — inconsistent names will compile but produce undefined behavior.
+:::
+
 ### Range Patterns
 
-Use `..=` for inclusive ranges:
+Use `..` for exclusive ranges and `..=` for inclusive ranges:
 
 ```valen
 match score {
-    0..=59 => "fail",
-    60..=79 => "pass",
-    80..=100 => "excellent",
-    _ => "out of range",
+    0..10 => "single digit",       // 0 <= score < 10
+    10..=99 => "double digit",     // 10 <= score <= 99
+    _ => "other",
 }
 ```
 
-### Guard Clauses (`if`)
+::: warning Range pattern limitations
+Range patterns only support integer literals. The end value must be an `Int` literal specifically — `Long` literals, floats, characters, and strings are not supported as range endpoints.
+:::
+
+### Match Guards (`if`)
 
 Add a boolean condition after the pattern for extra filtering:
 
@@ -124,7 +170,9 @@ match user {
 }
 ```
 
-Important: guard arms are **not considered exhaustive** on their own. The guard might be `false` at runtime, so the compiler doesn't count it as covering all cases:
+Guard conditions have access to variables bound by the pattern. The condition must evaluate to `Bool`.
+
+**Important:** guard arms are **not considered exhaustive** on their own. The guard might be `false` at runtime, so the compiler doesn't count it as covering all cases:
 
 ```valen
 // ERROR: negative values not covered
@@ -160,20 +208,6 @@ match user {
 ```
 
 The `..` means "ignore the remaining fields." The `@` captures the whole `User` into `p`.
-
-## Variant Shorthand in Patterns
-
-When the match scrutinee's type tells the compiler which enum you're matching, you can use the dot shorthand:
-
-```valen
-match color {
-    .Red => "red",
-    .Green => "green",
-    .Blue(v) => f"blue({v})",
-}
-```
-
-This is the same as writing `Color::Red`, `Color::Green`, etc. — just shorter. It works in `if let` and `while let` too.
 
 ## Exhaustiveness
 
@@ -260,6 +294,9 @@ let Some(v) = opt else { 42 };
 
 // OK: else block returns
 let Some(v) = opt else { return default_value; };
+
+// OK: else block panics
+let Ok(data) = readFile(path) else { panic("read failed"); };
 ```
 
 This flattens deeply nested match chains into linear code:
@@ -294,11 +331,11 @@ fn process(result: Result<Data, Error>) -> String {
 | Wildcard | `_` | Nothing |
 | Variable | `x` | `x` = matched value |
 | Destructure | `Shape::Circle(r)` | `r` = field value |
+| Shorthand | `.Circle(r)`, `.None` | Same as full path |
 | Or | `1 \| 2 \| 3` | Same names across alternatives |
-| Range | `0..=100` | Nothing |
+| Range | `0..=100`, `0..10` | Nothing |
 | Guard | `x if x > 0` | `x` = matched value |
 | @ Binding | `p @ Point(x, y)` | `p` = whole value, `x`, `y` = fields |
-| Shorthand | `.Circle(r)` | `r` = field value |
 
 ## Next Steps
 

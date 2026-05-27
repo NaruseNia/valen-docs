@@ -35,10 +35,10 @@ That's it. No ceremony.
 
 ## Calling Java Methods
 
-Here's the rule: **every Java method call must be wrapped in `safe { }` or `unsafe { }`**. A bare call is a compile error.
+Here's the rule: **every Java method call should be wrapped in `safe { }` or `unsafe { }`**. A bare call is discouraged and will eventually be a compile error.
 
 ```valen
-// Compile error — bare Java method call
+// Will be a compile error in the future — bare Java method call
 let content = Files.readString(path);
 
 // OK — wrapped in safe
@@ -50,6 +50,10 @@ let content = unsafe { Files.readString(path) };
 
 Why? Because Java methods can throw exceptions and return null. Valen won't let you pretend otherwise.
 
+::: info Enforcement coming soon
+The `safe`/`unsafe` requirement for Java method calls is part of Valen's design, but the compiler does not currently reject bare calls. Bare calls still compile. Future versions will enforce this rule, so adopting `safe`/`unsafe` now is recommended.
+:::
+
 ### The Three Modes
 
 | Syntax | Return Type | Exceptions | Null |
@@ -57,15 +61,26 @@ Why? Because Java methods can throw exceptions and return null. Valen won't let 
 | `safe { expr }` | `Result<T?, JavaException>` | Wrapped in `Err` | Nullable `T?` |
 | `safe? expr` | `T?` | Early return via `?` | Nullable `T?` |
 | `unsafe { expr }` | `T` (non-nullable) | Pass-through (crash) | NPE risk |
-| Bare call | **Compile error** | — | — |
 
 ::: tip Use `safe` by default
 Reach for `unsafe` only when you're absolutely certain the call won't throw and won't return null. When in doubt, `safe` is your friend.
 :::
 
-## Null Handling: Java null Becomes `Option<T>`
+## Null Handling: `T?` and `Option<T>` Are Different
 
-Every Java method return value inside `safe { }` is automatically typed as `T?` (`Option<T>`). No exceptions. Even if the Java method is annotated `@NonNull`, Valen doesn't trust it.
+This is a critical distinction in Valen:
+
+| Type | What It Is | When It Appears |
+|---|---|---|
+| `T?` | Nullable type — JVM null is a valid value | Java method returns, Java interop |
+| `Option<T>` | Valen-native ADT enum (`Some(T)` / `None`) | Valen-native code |
+
+**`T?` is NOT sugar for `Option<T>`.** They are completely separate types in Valen's type system.
+
+- `T?` maps to JVM boxed types (e.g., `Int?` becomes `java/lang/Integer`)
+- `Option<T>` is a real Valen enum with `Some` and `None` variants
+
+When you call a Java method inside `safe { }`, the return value is typed as `T?` (nullable), because Java methods can always return null — even when they pinky-promise they won't:
 
 ```valen
 import java.util.HashMap;
@@ -73,18 +88,18 @@ import java.util.HashMap;
 let map = HashMap<String, String>();
 safe { map.put("key", "value") };
 
-// map.get() returns V in Java, but Option<String> in Valen
-let val: Option<String> = safe { map.get("key") }?;
-
-match val {
-    Some(v) => println(f"found: {v}"),
-    None => println("not found"),
-}
+// map.get() returns V in Java, but T? in Valen's safe context
+let result = safe { map.get("key") };
+// result: Result<String?, JavaException>
 ```
 
-`void` methods come back as `Unit` — no `Option` wrapping needed.
+`void` methods come back as `Unit` — no nullable wrapping needed.
 
 Kotlin chose the "platform type `T!`" approach — maybe null, maybe not, who knows? Valen says: it's always `T?`. Boringly safe.
+
+### The `?` Operator Does Not Work on `T?`
+
+The `?` (try) operator works on `Option<T>` and `Result<T, E>` but **not on `T?`**. If you need to convert a nullable value, handle it explicitly.
 
 ## Collections: `for` Just Works
 
@@ -160,7 +175,7 @@ public final class Green implements Color {}
 ```
 
 ```valen
-// Valen side — exhaustive match, no _ needed
+// Valen side — exhaustive match works
 import com.example.Color;
 
 match color {
@@ -202,7 +217,7 @@ valenc compile --classpath lib/guava.jar:lib/commons.jar src/main.vln
 | Call a Java method safely | `safe { javaMethod() }` |
 | Call with `?` propagation | `safe? javaMethod()` |
 | Construct a Java object | `ArrayList()` (no `safe` needed) |
-| Handle null from Java | It's `T?` — match on `Some`/`None` |
+| Handle null from Java | It's `T?` — a nullable type (not `Option<T>`) |
 | Iterate a Java collection | `for item in list { ... }` |
 | Exhaustive match on sealed | Library needs `@valen.Closed` |
 | Add to classpath | `valenc compile --classpath path.jar` |

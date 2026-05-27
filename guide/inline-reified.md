@@ -37,6 +37,10 @@ fn main() {
 }
 ```
 
+::: info Lambda arity limit
+Inline functions currently support lambda parameters with up to 2 arguments (e.g., `fn(A, B) -> C`). Lambdas with 3+ parameters are not supported.
+:::
+
 ## `reified T` — Types That Survive Erasure
 
 Normally, `T` is erased at runtime. Mark it `reified` inside an `inline fn`, and the compiler substitutes the concrete type at each call site:
@@ -58,23 +62,36 @@ Without `reified`, `value is T` would be a compile error — the JVM has no idea
 |---|---|---|
 | Type check | `value is T` | `instanceof` against the concrete type |
 | Cast | `value as T` | Cast to the concrete type |
-| Class literal | `T::class` | Gets the `Class` object for `T` |
 
-### Practical Example: Type-Safe Deserialization
+That's the complete list. These two operations are the only ones that work with `reified` type parameters.
 
-This is where `reified` really shines. Instead of passing `Class<T>` manually, the type parameter carries the information:
+::: warning `T::class` is not implemented
+The `T::class` syntax for getting a `Class` object from a reified type parameter is planned but **not yet available**. If you need the class object, pass it as an explicit parameter for now:
 
 ```valen
-inline fn <reified T> fromJson(json: String) -> T {
-    let cls = T::class;
+// Instead of T::class, pass the class explicitly:
+fn <T> fromJson(json: String, cls: Class<T>) -> T {
     deserialize(json, cls) as T
 }
-
-let user = fromJson<User>(jsonStr);
-// T::class resolves to User.class at this call site
 ```
+:::
 
-No `Class<User>` argument, no `TypeReference<User>{}` ceremony. The compiler does the work.
+### Practical Example: Type-Safe Filtering
+
+```valen
+inline fn <reified T> filterByType(items: List<Any>) -> List<T> {
+    let result = ArrayList<T>();
+    for item in items {
+        if item is T {
+            safe { result.add(item as T) };
+        }
+    }
+    result
+}
+
+let mixed: List<Any> = getItems();
+let strings: List<String> = filterByType<String>(mixed);
+```
 
 ### Mixing Reified and Non-Reified
 
@@ -106,11 +123,13 @@ There are a few ground rules:
 
 - **Recompilation cascade.** Changing an `inline fn`'s body means every call site needs recompilation. Keep inline functions small.
 
+- **Lambda arity max 2.** Lambda parameters can take at most 2 arguments.
+
 ## Java Interop
 
 From Java's perspective, an `inline fn` is just a regular method. Java can call it — but the inlining doesn't happen. The method executes as a normal call.
 
-More importantly, **`reified` has no effect when called from Java**. JVM type erasure applies, so `value is T` and `T::class` won't work correctly:
+More importantly, **`reified` has no effect when called from Java**. JVM type erasure applies, so `value is T` won't work correctly:
 
 ```valen
 // Valen side
@@ -129,7 +148,7 @@ If you need the `reified` behavior, call the function from Valen code.
 
 ::: tip When to reach for `inline fn`
 1. Your function takes a lambda and you want zero allocation overhead
-2. You need `reified T` for runtime type operations
+2. You need `reified T` for runtime type operations (`is` / `as`)
 3. The function body is small (big bodies = bytecode bloat)
 
 If none of these apply, a regular `fn` is simpler and compiles faster.

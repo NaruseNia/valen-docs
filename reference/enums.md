@@ -65,65 +65,110 @@ if let .Some(x) = opt {
 }
 ```
 
-## Adding Methods via impl
+## `derives(...)` Clause
 
-Enums cannot have methods in the declaration body. Use `impl` blocks instead:
-
-### Inherent impl
+Enums can declare `derives(...)` to auto-generate methods for payload variants.
 
 ```valen
+enum Shape derives(Eq, Hash, Display, Clone) {
+    Circle(r: Float),
+    Rect(w: Float, h: Float),
+    Point,
+}
+```
+
+**Syntax:** `derives(Trait1, Trait2, ...)` — placed after the enum name (and generic parameters), before the body `{`.
+
+### Derivable Traits
+
+| Trait     | Generated Method                | Applies To |
+|-----------|---------------------------------|------------|
+| `Eq`     | `equals(Object) -> Boolean`     | Payload variants only |
+| `Hash`   | `hashCode() -> Int`             | Payload variants only |
+| `Display` | `toString() -> String`         | Payload variants only |
+| `Clone`  | `copy(...) -> Self`             | Payload variants only |
+
+Bare variants (no payload) are singletons — identity equals is sufficient, so derives do not apply to them.
+
+The generation logic is shared with `data class` (same `data_class_methods` module).
+
+## Inherent Methods via `impl`
+
+Enums can have methods through inherent `impl` blocks:
+
+```valen
+enum Shape {
+    Circle(r: Float),
+    Rect(w: Float, h: Float),
+    Point,
+}
+
 impl Shape {
     fn describe(self) -> String {
         match self {
-            Shape::Circle(r) => f"circle r={r}",
-            Shape::Rect(w, h) => f"rect {w}x{h}",
-            Shape::Point => "point",
+            .Circle(r) => f"circle with radius {r}",
+            .Rect(w, h) => f"rect {w}x{h}",
+            .Point => "point",
         }
     }
-}
-```
 
-### Trait impl
-
-```valen
-impl Area for Shape {
-    fn area(self) -> Float {
+    fn is_circle(self) -> Boolean {
         match self {
-            Shape::Circle(r) => 3.14159 * r * r,
-            Shape::Rect(w, h) => w * h,
-            Shape::Point => 0.0,
+            .Circle(_) => true,
+            _ => false,
         }
     }
 }
 ```
 
-## enum vs sealed class
+- `impl EnumName { ... }` — inherent methods, available on all variants.
+- `impl Trait for EnumName { ... }` — trait implementation.
+- Methods are emitted on the sealed interface, so all variants can use them.
+
+## `enum` vs `sealed class`
 
 | Aspect              | `enum`                             | `sealed class`                         |
 |---------------------|------------------------------------|----------------------------------------|
 | Purpose             | Data sum (ADT)                     | Closed OOP hierarchy                   |
 | Variant state       | Payload fields only                | Own state, methods, trait impls         |
-| Own methods         | No (via `impl` only)              | Yes (in class body)                    |
-| Inheritance         | None (flat)                        | Parent–child hierarchy                 |
+| Own methods         | Via `impl` blocks                  | In class body or `impl` blocks         |
+| Inheritance         | None (flat)                        | Parent-child hierarchy                 |
 | Per-variant visibility | Not possible                    | Each subtype decides independently     |
 
-**Rule of thumb:** start with `enum`. Upgrade to `sealed class` when variants need their own methods or state.
+**Rule of thumb:** start with `enum`. Upgrade to `sealed class` when variants need their own independent methods or state.
 
 ## JVM Bytecode Representation
 
-| Variant kind      | JVM representation                     |
+| Variant Kind      | JVM Representation                     |
 |-------------------|----------------------------------------|
 | With payload      | `record` implementing a `sealed interface` |
 | Without payload   | Singleton class with `INSTANCE` field  |
 
 ```java
-// Shape in Java bytecode:
+// Shape.valen -> Shape.class + Shape$Circle.class + Shape$Rect.class + Shape$Point.class
+// Each variant is emitted as a separate top-level .class file
+
+// sealed interface (enum itself)
 public sealed interface Shape permits Shape$Circle, Shape$Rect, Shape$Point {}
-public static final record Shape$Circle(double r) implements Shape {}
-public static final record Shape$Rect(double w, double h) implements Shape {}
-public static final class Shape$Point implements Shape {
+
+// payload variant -> record (extends java.lang.Record)
+public final record Shape$Circle(float r) implements Shape {}
+public final record Shape$Rect(float w, float h) implements Shape {}
+
+// bare variant -> singleton class
+public final class Shape$Point implements Shape {
     public static final Shape$Point INSTANCE = new Shape$Point();
+    private Shape$Point() {}
 }
 ```
 
-Variant binary name: `EnumName$VariantName` (Java inner-class convention).
+Key points:
+- The enum itself becomes a `sealed interface` with a `PermittedSubclasses` attribute.
+- Payload variants become `record` classes with `private final` fields and public getters.
+- Bare variants become singleton classes with a static `INSTANCE` field.
+- Variant classes are **separate top-level `.class` files**, not `static` nested classes. The `$` in the binary name follows Java naming convention but the class structure is independent.
+- Valen `Float` maps to JVM `float` (32-bit). Valen `Double` maps to JVM `double` (64-bit).
+- `derives(...)` generates `equals` / `hashCode` / `toString` / `copy` on payload variant records.
+- Inherent impl and trait impl methods are emitted on the sealed interface.
+
+Variant binary name: `EnumName$VariantName` (Java inner-class naming convention).

@@ -55,13 +55,61 @@ greet("yo", 3)       // "yo x3"
 
 A few things to know:
 
-- Default values can be any expression — not just literals.
-- They're evaluated at each call site, not once at definition time.
-- Defaults work on any parameter position (no "must be at the end" rule).
+- Default values can be **any expression** — not just literals. Function calls, field accesses, whatever you need.
+- They're evaluated at **each call site**, not once at definition time.
+- Defaults work on **any parameter position** (no "must be at the end" rule).
 - Combine with named arguments to skip middle parameters:
 
 ```valen
 greet(count = 5)     // "hi x5" — msg uses default, count is explicit
+```
+
+Defaults also work on class and data class constructor parameters, and on trait methods (though `impl` blocks cannot override a trait method's default values).
+
+## `self` and `mut self`
+
+Methods are just functions whose first parameter is `self` or `mut self`. This determines whether the method can modify the receiver.
+
+### `self` — Immutable receiver
+
+The method can read the instance but not modify it.
+
+```valen
+class Counter {
+    let mut count: Int = 0;
+
+    fn get(self) -> Int {
+        self.count
+    }
+}
+```
+
+### `mut self` — Mutable receiver
+
+The method can read and write to the instance's fields.
+
+```valen
+class Counter {
+    let mut count: Int = 0;
+
+    fn increment(mut self) {
+        self.count += 1;
+    }
+}
+```
+
+The same `self` / `mut self` convention applies to trait methods:
+
+```valen
+trait Resettable {
+    fn reset(mut self);
+}
+
+impl Resettable for Counter {
+    fn reset(mut self) {
+        self.count = 0;
+    }
+}
 ```
 
 ## Methods vs Associated Functions
@@ -121,14 +169,50 @@ let classify = |n: Int| -> String {
 };
 ```
 
-Lambdas capture outer variables by reference. Mutable variables can be captured and mutated:
+### Lambda Arity Limit
+
+Lambdas in Valen are compiled to `java.util.function` interfaces, which means **the maximum number of parameters is 2**.
+
+| Parameters | JVM type |
+|------------|----------|
+| 0 | `java.util.function.Supplier<R>` |
+| 1 | `java.util.function.Function<T, R>` |
+| 2 | `java.util.function.BiFunction<T, U, R>` |
+
+A lambda with 3 or more parameters is a **compile error**. If you need more, use a named function or a data class to bundle parameters.
+
+### Capturing Mutable Variables
+
+Lambdas can capture outer variables, but mutating captured variables requires explicit `ref mut`:
 
 ```valen
 let mut count = 0;
-let inc = || { count = count + 1; };
+let r = ref mut count;
+let inc = || { *r = *r + 1; };
 inc();
 inc();
 // count == 2
+```
+
+## `unsafe fn`
+
+An `unsafe fn` is a function that requires an `unsafe { }` block at the call site. Use it for operations that bypass Valen's safety guarantees, such as unchecked casts or low-level JVM operations.
+
+```valen
+unsafe fn cast_unchecked<T>(obj: Any) -> T {
+    obj as T
+}
+
+// Calling requires unsafe
+let value: Int = unsafe { cast_unchecked(raw) };
+```
+
+`unsafe fn` can be combined with `inline fn`:
+
+```valen
+unsafe inline fn fast_cast<T>(obj: Any) -> T {
+    obj as T
+}
 ```
 
 ## Pipeline Operator
@@ -150,7 +234,21 @@ The desugaring is straightforward: `x |> f(a, b)` becomes `f(x, a, b)`.
 data |> validate() |> transform(opts);   // transform(validate(data), opts)
 ```
 
-Pipelines are left-associative and have the lowest precedence of any operator, so they chain naturally.
+Pipelines are left-associative and have the lowest precedence of any non-assignment operator, so they chain naturally.
+
+## UFCS (Uniform Function Call Syntax)
+
+Method syntax `value.method(args)` is the primary way to call methods. When there's ambiguity (e.g., multiple traits define the same method name), use the fully qualified form:
+
+```valen
+// Normal method call
+xs.map(|x| x * 2);
+
+// Disambiguate by specifying the trait
+Mappable::map(xs, |x| x * 2);
+```
+
+`foo(args)` is always resolved as a top-level function call. You can't call a trait method using bare function syntax.
 
 ## Inline Functions
 
@@ -166,6 +264,10 @@ inline fn <T> measure(block: fn() -> T) -> T {
 ```
 
 This is also where `reified` type parameters live — they let you do `is` checks and casts on generic types at runtime, defeating JVM erasure.
+
+::: warning Inline restrictions
+Inline functions cannot be recursive (the expansion would be infinite). Also, `reified` type parameters are only valid inside `inline fn` — using them in a regular function is a compile error.
+:::
 
 For the full story, see [Inline & Reified](./inline-reified).
 
