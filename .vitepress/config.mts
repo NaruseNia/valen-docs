@@ -2,6 +2,7 @@ import { defineConfig } from "vitepress";
 import valenGrammar from "./valen.tmLanguage.json" with { type: "json" };
 
 export default defineConfig({
+  base: "/valen-docs/",
   title: "Valen",
   description: "An ADT-first language for the JVM",
   head: [
