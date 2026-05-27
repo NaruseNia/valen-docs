@@ -1,0 +1,23 @@
+:root {
+  --vp-font-family-mono: "Lilex Variable", "Lilex", ui-monospace, SFMono-Regular,
+    "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --vp-c-brand-1: #7c5cfc;
+  --vp-c-brand-2: #6a4de0;
+  --vp-c-brand-3: #5840c0;
+  --vp-c-brand-soft: rgba(124, 92, 252, 0.14);
+}
+
+.dark {
+  --vp-c-brand-1: #a78bfa;
+  --vp-c-brand-2: #8b6ff0;
+  --vp-c-brand-3: #7c5cfc;
+  --vp-c-brand-soft: rgba(167, 139, 250, 0.14);
+}
+
+.vp-doc div[class*="language-"] code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  font-feature-settings: "calt" 1, "liga" 1;
+}
