@@ -152,17 +152,18 @@ let parse = |s: String| -> Int {
 };
 ```
 
-### パラメータ数の制限
+### パラメータ数
 
-コード生成はラムダを `java.util.function` の標準関数インターフェースにマッピングするため、パラメータは**最大 2 つ**に制限されています。
+0〜2パラメータは `java.util.function` の標準インターフェースにマッピング。3〜22パラメータはコンパイラが `valen/core/FunctionN` インターフェースを自動生成する。
 
 | パラメータ数 | JVM マッピング |
 |------------|-------------|
 | 0 | `java.util.function.Supplier<R>` |
 | 1 | `java.util.function.Function<T, R>` |
 | 2 | `java.util.function.BiFunction<T, U, R>` |
+| 3〜22 | `valen.core.FunctionN<A, B, ..., R>`（コンパイラ生成） |
 
-3 つ以上のパラメータを持つラムダはコンパイルエラーになります。
+23パラメータ以上はコンパイルエラー。
 
 ## `unsafe fn`
 

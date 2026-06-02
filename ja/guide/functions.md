@@ -169,17 +169,18 @@ let classify = |n: Int| -> String {
 };
 ```
 
-### ラムダのアリティ制限
+### ラムダのアリティ
 
-Valenのラムダは `java.util.function` インターフェースにコンパイルされるため、**パラメータの最大数は2つ**です。
+0〜2パラメータのラムダは `java.util.function` の標準インターフェースにマッピングされます。3〜22パラメータのラムダはコンパイラが `valen.core.FunctionN` インターフェースを自動生成します。
 
 | パラメータ数 | JVMの型 |
 |------------|----------|
 | 0 | `java.util.function.Supplier<R>` |
 | 1 | `java.util.function.Function<T, R>` |
 | 2 | `java.util.function.BiFunction<T, U, R>` |
+| 3〜22 | `valen.core.FunctionN<A, B, ..., R>`（コンパイラ生成） |
 
-3つ以上のパラメータを持つラムダは**コンパイルエラー**になります。それ以上必要な場合は、名前付き関数を使うか、data classでパラメータをまとめてください。
+23パラメータ以上はコンパイルエラーになります。
 
 ### ミュータブル変数のキャプチャ
 

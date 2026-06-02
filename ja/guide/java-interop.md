@@ -58,8 +58,8 @@ Java メソッド呼び出しの `safe`/`unsafe` 要件は Valen の設計の一
 
 | 構文 | 戻り値型 | 例外 | Null |
 |---|---|---|---|
-| `safe { expr }` | `Result<T?, JavaException>` | `Err` にラップ | Nullable `T?` |
-| `safe? expr` | `T?` | `?` で早期リターン | Nullable `T?` |
+| `safe { expr }` | `Result<Option<T>, JavaException>` | `Err` にラップ | null は `None` |
+| `safe? expr` | `Option<T>` | `?` で早期リターン | null は `None` |
 | `unsafe { expr }` | `T`（非 nullable） | パススルー（クラッシュ） | NPE リスク |
 
 ::: tip デフォルトは `safe`

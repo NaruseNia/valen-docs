@@ -134,7 +134,7 @@ open class Animal(pub name: String) {
 }
 
 abstract class Shape {
-    abstract fn area(self) -> Float { /* placeholder */ }
+    abstract fn area(self) -> Float;
 }
 
 sealed class Payment;
@@ -144,9 +144,7 @@ data class Cash : Payment();
 
 `open` does not cascade — if `B : A` and `B` itself should be subclassable, `B` must also be declared `open`.
 
-::: warning Known Limitation — Abstract Methods
-The AST supports bodyless methods (`body: Option<Block>`), but **the current parser requires all methods to have a body**. `abstract fn area(self) -> Float;` (semicolon-terminated, no body) will produce a parse error. For now, abstract methods need a placeholder body. Support for bodyless `abstract fn` with `;` termination is planned.
-:::
+Abstract methods use `;` termination and must not have a body. Providing a body on an `abstract fn` produces a compile error (`ABSTRACT_METHOD_HAS_BODY`). Non-abstract methods without a body also produce an error (`NON_ABSTRACT_MISSING_BODY`).
 
 ## `sealed class` / `sealed trait` Bytecode
 

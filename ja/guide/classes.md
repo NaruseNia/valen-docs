@@ -269,7 +269,7 @@ class Dog(pub name: String) : Animal(name) {
 
 ```valen
 abstract class Shape {
-    abstract fn area(self) -> Float { /* placeholder */ }
+    abstract fn area(self) -> Float;
 
     fn describe(self) -> String {
         f"area = {self.area()}"
@@ -283,9 +283,7 @@ class Circle(pub r: Float) : Shape() {
 }
 ```
 
-::: warning 既知の制限: abstract メソッドにもボディが必要
-パーサは現在、`abstract` メソッドを含むすべてのメソッドにボディを要求します。abstract メソッドにはプレースホルダボディ（`{ /* placeholder */ }` など）を置いてください。将来のパーサ更新でボディなしの `abstract fn area(self) -> Float;` 構文をサポート予定です。
-:::
+abstract メソッドは `;` で終端し、ボディを持ちません。`abstract fn` にボディを付けるとコンパイルエラーになります。
 
 ### Sealed クラス
 

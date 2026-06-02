@@ -83,15 +83,29 @@ let content = safe { file.readString() };  // Result<String?, JavaException>
 let content: String = unsafe { file.readString() };  // String（か爆発）
 ```
 
-### 3. Null を非 Null として扱う
+### 3. null リテラルと Nullable 型
 
-`unsafe` 内では Java の戻り値は非 nullable として扱われます。メソッドが実際に null を返すと NPE になりますよ:
+`null` リテラルは **`unsafe` ブロック内でのみ使用可能**。通常の Valen コードでは `Option<T>` で値の不在を表現する:
 
 ```valen
-// safe 版 — null が T? になる
-let result = safe { map.get("key") };  // Result<String?, JavaException>
+// unsafe 内でのみ null が使える
+unsafe {
+    let x: String? = null;  // OK
+    if (x != null) {
+        println(x.length());
+    }
+}
 
-// unsafe 版 — null が NPE になる
+// let y: String? = null;  // ERROR: unsafe 外での null は禁止
+```
+
+`T?`（nullable 型）も `unsafe` ブロック内で Java interop のために直接操作可能:
+
+```valen
+// safe 版 — null は Option になる
+let result = safe { map.get("key") };  // Result<Option<String>, JavaException>
+
+// unsafe 版 — null は NPE リスク
 let val: String = unsafe { map.get("key") };  // キーがなければ NPE
 ```
 

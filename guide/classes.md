@@ -269,7 +269,7 @@ For when you want to declare a method without implementing it:
 
 ```valen
 abstract class Shape {
-    abstract fn area(self) -> Float { /* placeholder */ }
+    abstract fn area(self) -> Float;
 
     fn describe(self) -> String {
         f"area = {self.area()}"
@@ -283,9 +283,7 @@ class Circle(pub r: Float) : Shape() {
 }
 ```
 
-::: warning Known limitation: abstract methods need a body
-The parser currently requires all methods to have a body, even `abstract` ones. You need to provide a placeholder body (like `{ /* placeholder */ }`) for abstract methods. A future parser update will support bodyless `abstract fn area(self) -> Float;` syntax.
-:::
+Abstract methods use `;` termination and must not have a body. Non-abstract methods must have a body.
 
 ### Sealed Classes
 

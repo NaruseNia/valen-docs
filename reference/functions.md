@@ -152,17 +152,18 @@ let parse = |s: String| -> Int {
 };
 ```
 
-### Arity Limit
+### Arity
 
-Codegen maps lambdas to `java.util.function` standard functional interfaces, limiting parameters to **2 at most**.
+Codegen maps lambdas to `java.util.function` standard functional interfaces for 0-2 parameters. For 3-22 parameters, the compiler generates `valen/core/FunctionN` interfaces on demand.
 
 | Parameters | JVM Mapping |
 |------------|-------------|
 | 0 | `java.util.function.Supplier<R>` |
 | 1 | `java.util.function.Function<T, R>` |
 | 2 | `java.util.function.BiFunction<T, U, R>` |
+| 3-22 | `valen.core.FunctionN<A, B, ..., R>` (compiler-generated) |
 
-A lambda with 3 or more parameters is a compile error.
+A lambda with 23 or more parameters is a compile error.
 
 ## `unsafe fn`
 

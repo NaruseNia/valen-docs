@@ -181,22 +181,22 @@ let value = find_something()
 
 ## `safe { }` — Taming Java Exceptions
 
-Java methods throw exceptions. Valen methods don't. The `safe { }` block is the bridge between these two worlds — it catches Java exceptions and wraps them into `Result<T, JavaException>`.
+Java methods throw exceptions. Valen methods don't. The `safe { }` block is the bridge between these two worlds — it catches Java exceptions and wraps them into `Result<Option<T>, JavaException>`.
 
 ```valen
-fn read_safe(path: String) -> Result<String, JavaException> {
+fn read_safe(path: String) -> Result<Option<String>, JavaException> {
     safe { java.nio.file.Files.readString(java.nio.file.Paths.get(path)) }
 }
 ```
 
-If the Java method succeeds, you get `Ok(value)`. If it throws, you get `Err(JavaException)`. Java return values inside `safe { }` are automatically typed as nullable (`T?`) because Java methods can always return null — even when they promise they won't.
+If the Java method succeeds and returns non-null, you get `Ok(Some(value))`. If it returns null, you get `Ok(None)`. If it throws, you get `Err(JavaException)`. This three-way split cleanly separates success, absence, and failure.
 
 ### Shorthand: `safe expr`
 
 For one-liners, drop the braces:
 
 ```valen
-let r = safe file.readString();  // Result<String?, JavaException>
+let r = safe file.readString();  // Result<Option<String>, JavaException>
 ```
 
 This is exactly equivalent to `safe { file.readString() }`.

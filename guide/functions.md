@@ -169,17 +169,18 @@ let classify = |n: Int| -> String {
 };
 ```
 
-### Lambda Arity Limit
+### Lambda Arity
 
-Lambdas in Valen are compiled to `java.util.function` interfaces, which means **the maximum number of parameters is 2**.
+Lambdas with 0-2 parameters map to standard `java.util.function` interfaces. For 3-22 parameters, the compiler generates synthetic `valen.core.FunctionN` interfaces automatically.
 
 | Parameters | JVM type |
 |------------|----------|
 | 0 | `java.util.function.Supplier<R>` |
 | 1 | `java.util.function.Function<T, R>` |
 | 2 | `java.util.function.BiFunction<T, U, R>` |
+| 3-22 | `valen.core.FunctionN<A, B, ..., R>` (compiler-generated) |
 
-A lambda with 3 or more parameters is a **compile error**. If you need more, use a named function or a data class to bundle parameters.
+A lambda with 23 or more parameters is a compile error.
 
 ### Capturing Mutable Variables
 
