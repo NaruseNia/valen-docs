@@ -58,8 +58,8 @@ The `safe`/`unsafe` requirement for Java method calls is part of Valen's design,
 
 | Syntax | Return Type | Exceptions | Null |
 |---|---|---|---|
-| `safe { expr }` | `Result<T?, JavaException>` | Wrapped in `Err` | Nullable `T?` |
-| `safe? expr` | `T?` | Early return via `?` | Nullable `T?` |
+| `safe { expr }` | `Result<Option<T>, JavaException>` | Wrapped in `Err` | `None` for null |
+| `safe? expr` | `Option<T>` | Early return via `?` | `None` for null |
 | `unsafe { expr }` | `T` (non-nullable) | Pass-through (crash) | NPE risk |
 
 ::: tip Use `safe` by default

@@ -134,7 +134,7 @@ open class Animal(pub name: String) {
 }
 
 abstract class Shape {
-    abstract fn area(self) -> Float { /* プレースホルダ */ }
+    abstract fn area(self) -> Float;
 }
 
 sealed class Payment;
@@ -144,9 +144,7 @@ data class Cash : Payment();
 
 `open` は連鎖しません。`B : A` で `B` 自身もサブクラス化可能にしたい場合、`B` にも `open` を宣言する必要があります。
 
-::: warning 既知の制限 — 抽象メソッド
-AST は本体なしメソッド（`body: Option<Block>`）をサポートしていますが、**現在のパーサーはすべてのメソッドに本体を要求します**。`abstract fn area(self) -> Float;`（セミコロン終端、本体なし）はパースエラーになります。現時点では抽象メソッドにはプレースホルダ本体が必要です。セミコロン終端の本体なし `abstract fn` のサポートを予定しています。
-:::
+abstract メソッドは `;` で終端し、本体を持ちません。`abstract fn` に本体を付けるとコンパイルエラー (`ABSTRACT_METHOD_HAS_BODY`) になります。非 abstract メソッドに本体がない場合もエラー (`NON_ABSTRACT_MISSING_BODY`) になります。
 
 ## `sealed class` / `sealed trait` のバイトコード
 

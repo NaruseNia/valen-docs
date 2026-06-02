@@ -181,22 +181,22 @@ let value = find_something()
 
 ## `safe { }` — Java 例外を手なずける
 
-Java メソッドは例外を投げます。Valen メソッドは投げません。`safe { }` ブロックはこの2つの世界の橋渡し — Java 例外をキャッチして `Result<T, JavaException>` にラップしてくれます。
+Java メソッドは例外を投げます。Valen メソッドは投げません。`safe { }` ブロックはこの2つの世界の橋渡し — Java 例外をキャッチして `Result<Option<T>, JavaException>` にラップしてくれます。
 
 ```valen
-fn read_safe(path: String) -> Result<String, JavaException> {
+fn read_safe(path: String) -> Result<Option<String>, JavaException> {
     safe { java.nio.file.Files.readString(java.nio.file.Paths.get(path)) }
 }
 ```
 
-Java メソッドが成功すれば `Ok(value)` を取得。投げれば `Err(JavaException)` を取得。`safe { }` 内の Java 戻り値は自動的に nullable（`T?`）として型付けされます。Java メソッドは約束しても常に null を返す可能性があるので。
+Java メソッドが成功し非 null を返せば `Ok(Some(value))`。null を返せば `Ok(None)`。例外を投げれば `Err(JavaException)`。成功・不在・失敗の3つを明確に分離。
 
 ### 省略記法: `safe expr`
 
 ワンライナーなら中括弧を省略できます:
 
 ```valen
-let r = safe file.readString();  // Result<String?, JavaException>
+let r = safe file.readString();  // Result<Option<String>, JavaException>
 ```
 
 `safe { file.readString() }` と完全に等価。

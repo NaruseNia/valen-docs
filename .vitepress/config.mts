@@ -160,8 +160,8 @@ export default defineConfig({
           { text: "Guide", link: "/guide/getting-started" },
           { text: "Reference", link: "/reference/types" },
           {
-            text: "v0.1.0",
-            link: "https://github.com/NaruseNia/valen-lang/releases/tag/v0.1.0",
+            text: "v0.2.0",
+            link: "https://github.com/NaruseNia/valen-lang/releases/tag/v0.2.0",
           },
         ],
         sidebar: {
@@ -179,8 +179,8 @@ export default defineConfig({
           { text: "ガイド", link: "/ja/guide/getting-started" },
           { text: "リファレンス", link: "/ja/reference/types" },
           {
-            text: "v0.1.0",
-            link: "https://github.com/NaruseNia/valen-lang/releases/tag/v0.1.0",
+            text: "v0.2.0",
+            link: "https://github.com/NaruseNia/valen-lang/releases/tag/v0.2.0",
           },
         ],
         sidebar: {

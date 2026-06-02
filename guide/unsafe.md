@@ -83,15 +83,29 @@ let content = safe { file.readString() };  // Result<String?, JavaException>
 let content: String = unsafe { file.readString() };  // String (or explosion)
 ```
 
-### 3. Treating Null as Non-Null
+### 3. Null Literal and Nullable Types
 
-Inside `unsafe`, Java return values are treated as non-nullable. If the method actually returns null, you get an NPE:
+The `null` literal is **only available inside `unsafe` blocks**. Outside `unsafe`, Valen uses `Option<T>` for absence:
 
 ```valen
-// safe version — null becomes T?
-let result = safe { map.get("key") };  // Result<String?, JavaException>
+// null is available inside unsafe
+unsafe {
+    let x: String? = null;  // OK
+    if (x != null) {
+        println(x.length());
+    }
+}
 
-// unsafe version — null becomes NPE
+// let y: String? = null;  // ERROR: null outside unsafe
+```
+
+`T?` (nullable types) can also be directly manipulated inside `unsafe` blocks for Java interop:
+
+```valen
+// safe version — null becomes Option
+let result = safe { map.get("key") };  // Result<Option<String>, JavaException>
+
+// unsafe version — null becomes NPE risk
 let val: String = unsafe { map.get("key") };  // NPE if key is missing
 ```
 
